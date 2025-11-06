@@ -1,0 +1,33 @@
+﻿@model DLP.Application.Common.Templates.Models.CarrierOfferResultEmailViewModel
+@using DLP.HtmlHelpers;
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>@await Html.Translate("admin-rejection:email-subject", "Your Offer Was Not Selected", Model.UserLang)</title>
+</head>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+    <p>
+        @await Html.Translate("admin-rejection:greeting", "Dear", Model.UserLang) @Model.FullName,
+    </p>
+
+    <p>
+        @await Html.Translate("admin-rejection:intro", "Thank you for submitting your offer for Transport Request", Model.UserLang)
+        <strong>@Model.RequestId</strong>.
+        @await Html.Translate("admin-rejection:status", "After the review process, your offer was not selected by the Super Administrator.", Model.UserLang)
+    </p>
+
+    <p>
+        @await Html.Translate("admin-rejection:closing", "We appreciate your participation and encourage you to continue submitting offers in future transport requests.", Model.UserLang)
+    </p>
+
+    <p>
+        @await Html.Translate("admin-rejection:thank", "Thank you for your cooperation.", Model.UserLang)
+    </p>
+
+    <p>
+        @await Html.Translate("admin-rejection:regards", "Best Regards,", Model.UserLang)<br />
+        TransiGo Logistics Platform
+    </p>
+</body>
+</html>

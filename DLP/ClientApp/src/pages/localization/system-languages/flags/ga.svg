@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="Flag of Ireland" viewBox="0 0 1200 600">
+    <rect id="Green_Stripe" width="400" height="600" x="0" fill="#009a49"/>
+    <rect id="White_Stripe" width="400" height="600" x="400" fill="#fff"/>
+    <rect id="Orange_Stripe" width="400" height="600" x="800" fill="#ff7900"/>
+</svg>

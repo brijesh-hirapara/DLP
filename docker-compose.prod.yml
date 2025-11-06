@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  kgh-mysql:
+    image: dipakpakhale95/mysql:latest
+    container_name: kgh-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Web@123
+      MYSQL_USER: mrvppdev
+      MYSQL_PASSWORD: fhZjyJKP@scE#7TW
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  kgh-app:
+    container_name: kgh-private
+    image: dipakpakhale95/kgh-ivote:v1.0.1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "7111:80"
+      - "8443:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=app
+    depends_on:
+      - kgh-mysql
+    volumes:
+      - ./logs:/app/logs
+
+  kgh-app-srpska:
+    image: dipakpakhale95/kgh-ivote:v1.0.1
+    container_name: kgh_srpska_ivote_mk
+    ports:
+      - "7112:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=srpska
+    depends_on:
+      - kgh-mysql
+
+  kgh-app-fbih:
+    image: dipakpakhale95/kgh-ivote:v1.0.1
+    container_name: kgh_fbih_ivote_mk
+    ports:
+      - "7113:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=fbih
+    depends_on:
+      - kgh-mysql
+
+  kgh-app-brcko:
+    image: dipakpakhale95/kgh-ivote:v1.0.1
+    container_name: kgh_brcko_ivote_mk
+    ports:
+      - "7114:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=brcko
+    depends_on:
+      - kgh-mysql
+
+volumes:
+  mysql_data:

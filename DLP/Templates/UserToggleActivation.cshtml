@@ -1,0 +1,42 @@
+﻿@model DLP.Application.Common.Templates.Models.ToggleUserActivationModel;
+@using DLP.HtmlHelpers;
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>
+        User Status Notification
+    </title>
+</head>
+<body>
+    <div style='max-width: 500px; margin: 0 auto; background-color: #f2f2f2; padding: 20px;'>
+        <h1 style='color: #333333; text-align: center;'>
+            <span>@await Html.Translate("user-status:email.title", "User Status Update", Model.UserLang)</span>
+        </h1>
+        <br />
+        <p>
+            <span>@await Html.Translate("user-status:entry.text", "Dear", Model.UserLang) @Model.Email,</span>
+        </p>
+        <br />
+        <p>
+            @if (Model.IsActive)
+            {
+                <span>@await Html.Translate("user-status:email.activated", "Your account has been activated. You can now access the system using your credentials.", Model.UserLang)</span>
+            }
+            else
+            {
+                <span>@await Html.Translate("user-status:email.deactivated", "Your account has been deactivated. You will not be able to access the system until further notice.", Model.UserLang)</span>
+            }
+        </p>
+        <br />
+        <p>
+            <span>@await Html.Translate("user-status:action.details", "If you have any questions or concerns regarding this action, please contact the system administrator.", Model.UserLang)</span>
+        </p>
+        <br />
+        <p style='text-align: center; color: #888888; margin-top: 20px;'>
+            <span>@await Html.Translate("user-status:greetings", "Thank you", Model.UserLang)</span>
+        </p>
+    </div>
+</body>
+</html>

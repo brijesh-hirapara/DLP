@@ -1,0 +1,33 @@
+﻿@model DLP.Application.Common.Templates.Models.CarrierUserDetailsViewModel;
+@using DLP.HtmlHelpers;
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Financial Year Update</title>
+</head>
+<body>
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+        <p>@await Html.Translate("carrier-user-fy:entry.text", "Dear", Model.UserLang) @Model.FullName,</p>
+        <br />
+        <p>
+            @await Html.Translate("carrier-user-fy:sub-title",
+                     "We are pleased to inform you that the financial year has been successfully updated.", Model.UserLang)
+        </p>
+        <br />
+        <p>
+            @await Html.Translate("carrier-user-fy:next-steps",
+                     "Please review the updated financial year details and take any necessary actions as per your responsibilities.", Model.UserLang)
+        </p>
+        <br />
+        <p>
+            @await Html.Translate("carrier-user-fy:thank",
+                     "Thank you for your cooperation and continued support.", Model.UserLang)
+        </p>
+        <p>
+            @await Html.Translate("carrier-user-fy:regards",
+                     "Regards,", Model.UserLang)
+        </p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,37 @@
+/* Provide sufficient contrast against white background */
+a {
+  color: #0366d6;
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+code {
+  color: #E01A76;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #1b6ec2;
+  /* border-color: #1861ac; */
+  border-color: #ac186e;
+}
+.project-divider{
+  margin: 12px 0px !important;
+}
+.ant-popover-message{
+  padding: 0px !important;
+}
+.guildlines-modal .ant-collapse-content-box{
+  display: grid;
+  grid-template-columns: auto auto;
+}
+
+.ant-menu-sub.ant-menu-inline>.ant-menu-item, .ant-menu-sub.ant-menu-inline>.ant-menu-submenu>.ant-menu-submenu-title {
+  height: auto !important;
+}
+
+.usergroup_card_actions .usergroup_Button{
+padding: 0 10px !important;
+}

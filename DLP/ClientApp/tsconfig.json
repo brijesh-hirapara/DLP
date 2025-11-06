@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "preserveValueImports": false,
+    "sourceMap": true,
+    "downlevelIteration": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": "./src",
+    "paths": {
+      "components/*": ["components/*"],
+      "router/*": ["router/*"],
+      "redux/*": ["redux/*"],
+      "constants/*": ["constants/*"],
+      "pages/*": ["pages/*"],
+      "container/*": ["container/*"],
+      "utility/*": ["utility/*"],
+      "static/*": ["static/*"],
+      "hooks/*": ["hooks/*"],
+      "api/*": ["api/*"]
+      // Add more paths as needed
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "src/**/*.js"],
+  "exclude": ["/dist", "node_modules"]
+}

@@ -1,0 +1,33 @@
+﻿@model DLP.Application.Common.Templates.Models.RequestSubmittedVehicleFleetViewModel;
+@using DLP.HtmlHelpers;
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Request Approved Vehicle Fleet</title>
+</head>
+<body>
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+        <p>@await Html.Translate("request-approved-vehicle-fleet:entry.text", "Dear", Model.UserLang) @Model.UserName,</p>
+        <br />
+        <p>
+            @await Html.Translate("request-approved-vehicle-fleet:sub-title",
+            "We are pleased to inform you that your request has been reviewed and approved.", Model.UserLang)
+        </p>
+        <br />
+        <p>
+            @await Html.Translate("request-approved-vehicle-fleet:next-steps",
+            "Our team will take the necessary steps to proceed based on your request. We will keep you updated with any further developments.", Model.UserLang)
+        </p>
+        <br />
+        <p>
+            @await Html.Translate("request-approved-vehicle-fleet:thank",
+            "Thank you for your patience and understanding during this process.", Model.UserLang)
+        </p>
+        <p>
+            @await Html.Translate("request-approved-vehicle-fleet:regards",
+            "Regards,", Model.UserLang)
+        </p>
+    </div>
+</body>
+</html>

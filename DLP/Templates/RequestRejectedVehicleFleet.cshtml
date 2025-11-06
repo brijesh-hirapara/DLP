@@ -1,0 +1,47 @@
+﻿@model DLP.Application.Common.Templates.Models.RequestSubmittedVehicleFleetViewModel;
+@using DLP.HtmlHelpers;
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Request Rejected Vehicle Fleet</title>
+</head>
+<body>
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+        <p>@await Html.Translate("request-rejected-vehicle-fleet:entry.text", "Dear", Model.UserLang) @Model.UserName,</p>
+        <br />
+        <p>
+            @await Html.Translate("request-rejected-vehicle-fleet:sub-title",
+                     "We regret to inform you that your Vehicle Fleet request for", Model.UserLang) @await Html.Translate("request-rejected-vehicle-fleet:has-been-rejected",
+            "has been reviewed and rejected.", Model.UserLang)
+        </p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Reasons))
+        {
+            <br />
+            <p>
+                @await Html.Translate("request-rejected-vehicle-fleet:reasons",
+            "Reasons/Comments:", Model.UserLang)
+                <br />
+                @Model.Reasons
+            </p>
+        }
+
+        <br />
+        <p>
+            @await Html.Translate("request-rejected-vehicle-fleet:next-steps",
+            "Please get in touch with our support team if you need further clarification or wish to provide additional information.", Model.UserLang)
+        </p>
+        <br />
+        <p>
+            @await Html.Translate("request-rejected-vehicle-fleet:thank",
+            "Thank you for your understanding.", Model.UserLang)
+        </p>
+        <p>
+            @await Html.Translate("request-rejected-vehicle-fleet:regards",
+            "Regards,", Model.UserLang)
+        </p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1276 @@
+﻿CREATE TABLE IF NOT EXISTS `__EFMigrationsHistory` (
+    `MigrationId` varchar(150) CHARACTER SET utf8mb4 NOT NULL,
+    `ProductVersion` varchar(32) CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK___EFMigrationsHistory` PRIMARY KEY (`MigrationId`)
+) CHARACTER SET=utf8mb4;
+
+START TRANSACTION;
+
+ALTER DATABASE CHARACTER SET utf8mb4;
+
+CREATE TABLE `DeviceCodes` (
+    `UserCode` varchar(200) CHARACTER SET utf8mb4 NOT NULL,
+    `DeviceCode` varchar(200) CHARACTER SET utf8mb4 NOT NULL,
+    `SubjectId` varchar(200) CHARACTER SET utf8mb4 NULL,
+    `SessionId` varchar(100) CHARACTER SET utf8mb4 NULL,
+    `ClientId` varchar(200) CHARACTER SET utf8mb4 NOT NULL,
+    `Description` varchar(200) CHARACTER SET utf8mb4 NULL,
+    `CreationTime` datetime(6) NOT NULL,
+    `Expiration` datetime(6) NOT NULL,
+    `Data` longtext CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_DeviceCodes` PRIMARY KEY (`UserCode`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `FailedSynchronizations` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `Database` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Table` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Action` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `JsonData` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Message` longtext CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_FailedSynchronizations` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `FileSynchronizations` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Data` longblob NOT NULL,
+    `Table` longtext CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_FileSynchronizations` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `I18nLanguageCodes` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Name` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Code` longtext CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_I18nLanguageCodes` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Keys` (
+    `Id` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `Version` int NOT NULL,
+    `Created` datetime(6) NOT NULL,
+    `Use` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `Algorithm` varchar(100) CHARACTER SET utf8mb4 NOT NULL,
+    `IsX509Certificate` tinyint(1) NOT NULL,
+    `DataProtected` tinyint(1) NOT NULL,
+    `Data` longtext CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_Keys` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `PersistedGrants` (
+    `Key` varchar(200) CHARACTER SET utf8mb4 NOT NULL,
+    `Type` varchar(50) CHARACTER SET utf8mb4 NOT NULL,
+    `SubjectId` varchar(200) CHARACTER SET utf8mb4 NULL,
+    `SessionId` varchar(100) CHARACTER SET utf8mb4 NULL,
+    `ClientId` varchar(200) CHARACTER SET utf8mb4 NOT NULL,
+    `Description` varchar(200) CHARACTER SET utf8mb4 NULL,
+    `CreationTime` datetime(6) NOT NULL,
+    `Expiration` datetime(6) NULL,
+    `ConsumedTime` datetime(6) NULL,
+    `Data` longtext CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_PersistedGrants` PRIMARY KEY (`Key`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `RefreshTokens` (
+    `Id` bigint NOT NULL AUTO_INCREMENT,
+    `UserName` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Token` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `ExpiresAt` datetime(6) NOT NULL,
+    CONSTRAINT `PK_RefreshTokens` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `StateEntities` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Name` longtext CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_StateEntities` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Languages` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Position` int NOT NULL,
+    `I18nCodeId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `IsDefault` tinyint(1) NOT NULL,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_Languages` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_Languages_I18nLanguageCodes_I18nCodeId` FOREIGN KEY (`I18nCodeId`) REFERENCES `I18nLanguageCodes` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Cantons` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Name` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `StateEntityId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_Cantons` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_Cantons_StateEntities_StateEntityId` FOREIGN KEY (`StateEntityId`) REFERENCES `StateEntities` (`Id`) ON DELETE RESTRICT
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Translations` (
+    `Key` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `LanguageId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Value` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_Translations` PRIMARY KEY (`Key`, `LanguageId`),
+    CONSTRAINT `FK_Translations_Languages_LanguageId` FOREIGN KEY (`LanguageId`) REFERENCES `Languages` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Municipalities` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Name` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `CantonId` char(36) COLLATE ascii_general_ci NULL,
+    `StateEntityId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_Municipalities` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_Municipalities_Cantons_CantonId` FOREIGN KEY (`CantonId`) REFERENCES `Cantons` (`Id`),
+    CONSTRAINT `FK_Municipalities_StateEntities_StateEntityId` FOREIGN KEY (`StateEntityId`) REFERENCES `StateEntities` (`Id`) ON DELETE RESTRICT
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `ActivityLogs` (
+    `Id` int NOT NULL AUTO_INCREMENT,
+    `UserId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `IP` longtext CHARACTER SET utf8mb4 NULL,
+    `LogType` int NOT NULL,
+    `Activity` longtext CHARACTER SET utf8mb4 NULL,
+    `Description` longtext CHARACTER SET utf8mb4 NULL,
+    `Date` datetime(6) NOT NULL,
+    CONSTRAINT `PK_ActivityLogs` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Codebooks` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Name` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Type` int NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_Codebooks` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `CompanyBranches` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `BranchOfficeName` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `IdNumber` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Address` longtext CHARACTER SET utf8mb4 NULL,
+    `Email` longtext CHARACTER SET utf8mb4 NULL,
+    `ContactPerson` longtext CHARACTER SET utf8mb4 NULL,
+    `ContactPhone` longtext CHARACTER SET utf8mb4 NULL,
+    `Place` longtext CHARACTER SET utf8mb4 NULL,
+    `MunicipalityId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `OrganizationId` char(36) COLLATE ascii_general_ci NOT NULL,
+    CONSTRAINT `PK_CompanyBranches` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_CompanyBranches_Municipalities_MunicipalityId` FOREIGN KEY (`MunicipalityId`) REFERENCES `Municipalities` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `CompanyRegisterTypes` (
+    `Id` int NOT NULL AUTO_INCREMENT,
+    `OrganizationId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Type` int NOT NULL,
+    CONSTRAINT `PK_CompanyRegisterTypes` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `EmailOptions` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `From` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `SmtpHost` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `SmtpPort` int NOT NULL,
+    `SmtpUser` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `SmtpPass` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `IsActive` tinyint(1) NOT NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_EmailOptions` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `EmploymentHistory` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `CertifiedTechnicianId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `CompanyId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `StartDate` datetime(6) NULL,
+    `EndDate` datetime(6) NULL,
+    CONSTRAINT `PK_EmploymentHistory` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `EquipmentActivities` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `EquipmentId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `DateOfChange` datetime(6) NOT NULL,
+    `TypeOfChangeId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `NewOperatorName` longtext CHARACTER SET utf8mb4 NULL,
+    `NewCoolantId` char(36) COLLATE ascii_general_ci NULL,
+    `TechnicianCertificateNumber` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Comments` longtext CHARACTER SET utf8mb4 NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL DEFAULT FALSE,
+    CONSTRAINT `PK_EquipmentActivities` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_EquipmentActivities_Codebooks_TypeOfChangeId` FOREIGN KEY (`TypeOfChangeId`) REFERENCES `Codebooks` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `EquipmentActivityFiles` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `EquipmentActivityId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `FilePath` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `FileName` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Size` bigint NOT NULL,
+    `ContentType` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    CONSTRAINT `PK_EquipmentActivityFiles` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_EquipmentActivityFiles_EquipmentActivities_EquipmentActivity~` FOREIGN KEY (`EquipmentActivityId`) REFERENCES `EquipmentActivities` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `EquipmentFiles` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `EquipmentId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `FilePath` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `FileName` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Size` bigint NOT NULL,
+    `ContentType` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    CONSTRAINT `PK_EquipmentFiles` PRIMARY KEY (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Equipments` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `CompanyBranchId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `TypeOfEquipmentId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `TypeOfEquipmentOther` longtext CHARACTER SET utf8mb4 NULL,
+    `TypeOfCoolingSystemId` char(36) COLLATE ascii_general_ci NULL,
+    `TypeOfCoolingSystemOther` longtext CHARACTER SET utf8mb4 NULL,
+    `RefrigerantTypeId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Manufacturer` longtext CHARACTER SET utf8mb4 NULL,
+    `Type` longtext CHARACTER SET utf8mb4 NULL,
+    `Model` longtext CHARACTER SET utf8mb4 NULL,
+    `SerialNumber` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `YearOfProduction` int NULL,
+    `DateOfPurchase` datetime(6) NULL,
+    `MassOfRefrigerantKg` double NULL,
+    `PurposeOfEquipmentId` char(36) COLLATE ascii_general_ci NULL,
+    `CoolingTemperature` double NULL,
+    `CoolingEffectKw` double NULL,
+    `CompressorConnectionPowerKw` double NULL,
+    `LiquidCollectorVolume` double NULL,
+    `MassAddedLastYearInKg` double NULL,
+    `CommissioningDate` datetime(6) NULL,
+    `Comments` longtext CHARACTER SET utf8mb4 NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL DEFAULT FALSE,
+    `IsArchived` tinyint(1) NOT NULL DEFAULT FALSE,
+    CONSTRAINT `PK_Equipments` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_Equipments_Codebooks_PurposeOfEquipmentId` FOREIGN KEY (`PurposeOfEquipmentId`) REFERENCES `Codebooks` (`Id`) ON DELETE SET NULL,
+    CONSTRAINT `FK_Equipments_Codebooks_TypeOfCoolingSystemId` FOREIGN KEY (`TypeOfCoolingSystemId`) REFERENCES `Codebooks` (`Id`) ON DELETE SET NULL,
+    CONSTRAINT `FK_Equipments_Codebooks_TypeOfEquipmentId` FOREIGN KEY (`TypeOfEquipmentId`) REFERENCES `Codebooks` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_Equipments_CompanyBranches_CompanyBranchId` FOREIGN KEY (`CompanyBranchId`) REFERENCES `CompanyBranches` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Organizations` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Name` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `IdNumber` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `TaxNumber` longtext CHARACTER SET utf8mb4 NULL,
+    `ResponsiblePersonFullName` longtext CHARACTER SET utf8mb4 NULL,
+    `ResponsiblePersonFunction` longtext CHARACTER SET utf8mb4 NULL,
+    `Address` longtext CHARACTER SET utf8mb4 NULL,
+    `Place` longtext CHARACTER SET utf8mb4 NULL,
+    `PostCode` longtext CHARACTER SET utf8mb4 NULL,
+    `MunicipalityId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `StateEntityId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Email` longtext CHARACTER SET utf8mb4 NULL,
+    `PhoneNumber` longtext CHARACTER SET utf8mb4 NULL,
+    `WebsiteUrl` longtext CHARACTER SET utf8mb4 NULL,
+    `ContactPersonId` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `Type` int NOT NULL,
+    `LicenseId` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `LicenseDuration` datetime(6) NULL,
+    `BusinessActivityId` char(36) COLLATE ascii_general_ci NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_Organizations` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_Organizations_Codebooks_BusinessActivityId` FOREIGN KEY (`BusinessActivityId`) REFERENCES `Codebooks` (`Id`),
+    CONSTRAINT `FK_Organizations_Municipalities_MunicipalityId` FOREIGN KEY (`MunicipalityId`) REFERENCES `Municipalities` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Users` (
+    `Id` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `FirstName` longtext CHARACTER SET utf8mb4 NULL,
+    `LastName` longtext CHARACTER SET utf8mb4 NULL,
+    `BirthDay` datetime(6) NULL,
+    `PlaceOfBirth` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `IsActive` tinyint(1) NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `PersonalNumber` longtext CHARACTER SET utf8mb4 NULL,
+    `MustChangePassword` tinyint(1) NOT NULL,
+    `MunicipalityId` char(36) COLLATE ascii_general_ci NULL,
+    `StateEntityId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `AccessLevel` int NOT NULL,
+    `Address` longtext CHARACTER SET utf8mb4 NULL,
+    `Comments` longtext CHARACTER SET utf8mb4 NULL,
+    `OrganizationId` char(36) COLLATE ascii_general_ci NULL,
+    `IsCertifiedTechnician` tinyint(1) NOT NULL,
+    `LanguageId` char(36) COLLATE ascii_general_ci NULL,
+    `UserName` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `NormalizedUserName` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `Email` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `NormalizedEmail` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `EmailConfirmed` tinyint(1) NOT NULL,
+    `PasswordHash` longtext CHARACTER SET utf8mb4 NULL,
+    `SecurityStamp` longtext CHARACTER SET utf8mb4 NULL,
+    `ConcurrencyStamp` longtext CHARACTER SET utf8mb4 NULL,
+    `PhoneNumber` longtext CHARACTER SET utf8mb4 NULL,
+    `PhoneNumberConfirmed` tinyint(1) NOT NULL,
+    `TwoFactorEnabled` tinyint(1) NOT NULL,
+    `LockoutEnd` datetime(6) NULL,
+    `LockoutEnabled` tinyint(1) NOT NULL,
+    `AccessFailedCount` int NOT NULL,
+    CONSTRAINT `PK_Users` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_Users_Languages_LanguageId` FOREIGN KEY (`LanguageId`) REFERENCES `Languages` (`Id`),
+    CONSTRAINT `FK_Users_Municipalities_MunicipalityId` FOREIGN KEY (`MunicipalityId`) REFERENCES `Municipalities` (`Id`),
+    CONSTRAINT `FK_Users_Organizations_OrganizationId` FOREIGN KEY (`OrganizationId`) REFERENCES `Organizations` (`Id`) ON DELETE SET NULL,
+    CONSTRAINT `FK_Users_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Posts` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Subject` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Content` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL DEFAULT FALSE,
+    CONSTRAINT `PK_Posts` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_Posts_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`) ON DELETE RESTRICT
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Qualifications` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `CertifiedTechnicianId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `DateOfExam` datetime(6) NOT NULL,
+    `CertificateNumber` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `CertificateDuration` datetime(6) NOT NULL,
+    `QualificationTypeId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `TrainingCenterId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_Qualifications` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_Qualifications_Codebooks_QualificationTypeId` FOREIGN KEY (`QualificationTypeId`) REFERENCES `Codebooks` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_Qualifications_Organizations_TrainingCenterId` FOREIGN KEY (`TrainingCenterId`) REFERENCES `Organizations` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_Qualifications_Users_CertifiedTechnicianId` FOREIGN KEY (`CertifiedTechnicianId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_Qualifications_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `RefrigerantTypes` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Name` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `ASHRAEDesignation` longtext CHARACTER SET utf8mb4 NULL,
+    `TypeOfCoolingFluid` longtext CHARACTER SET utf8mb4 NULL,
+    `GlobalWarmingPotential` longtext CHARACTER SET utf8mb4 NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL DEFAULT FALSE,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_RefrigerantTypes` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_RefrigerantTypes_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Requests` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `IdNumber` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `RequestId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `CompanyId` char(36) COLLATE ascii_general_ci NULL,
+    `CompanyName` longtext CHARACTER SET utf8mb4 NULL,
+    `CompanyEmailAddress` longtext CHARACTER SET utf8mb4 NULL,
+    `CompanyPhoneNumber` longtext CHARACTER SET utf8mb4 NULL,
+    `WebsiteUrl` longtext CHARACTER SET utf8mb4 NULL,
+    `TaxNumber` longtext CHARACTER SET utf8mb4 NULL,
+    `ResponsiblePersonFullName` longtext CHARACTER SET utf8mb4 NULL,
+    `ResponsiblePersonFunction` longtext CHARACTER SET utf8mb4 NULL,
+    `ContactPerson` longtext CHARACTER SET utf8mb4 NULL,
+    `ContactPersonEmail` longtext CHARACTER SET utf8mb4 NULL,
+    `Address` longtext CHARACTER SET utf8mb4 NULL,
+    `Place` longtext CHARACTER SET utf8mb4 NULL,
+    `PostCode` longtext CHARACTER SET utf8mb4 NULL,
+    `Comments` longtext CHARACTER SET utf8mb4 NULL,
+    `MunicipalityId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `LicenseId` longtext CHARACTER SET utf8mb4 NULL,
+    `LicenseDuration` datetime(6) NULL,
+    `CertificationNumbers` longtext CHARACTER SET utf8mb4 NULL,
+    `TotalNumberOfServiceTechnians` int NULL,
+    `MeetsEquipmentRegulations` tinyint(1) NULL,
+    `IsFromPublic` tinyint(1) NOT NULL,
+    `LanguageId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Type` int NOT NULL,
+    `CompanyType` int NULL,
+    `AreaOfExpertise` int NULL,
+    `Status` int NOT NULL,
+    `BusinessActivityId` char(36) COLLATE ascii_general_ci NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `ReviewedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `ReviewedAt` datetime(6) NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    CONSTRAINT `PK_Requests` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_Requests_Codebooks_BusinessActivityId` FOREIGN KEY (`BusinessActivityId`) REFERENCES `Codebooks` (`Id`),
+    CONSTRAINT `FK_Requests_Municipalities_MunicipalityId` FOREIGN KEY (`MunicipalityId`) REFERENCES `Municipalities` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_Requests_Organizations_CompanyId` FOREIGN KEY (`CompanyId`) REFERENCES `Organizations` (`Id`) ON DELETE SET NULL,
+    CONSTRAINT `FK_Requests_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`) ON DELETE SET NULL,
+    CONSTRAINT `FK_Requests_Users_ReviewedById` FOREIGN KEY (`ReviewedById`) REFERENCES `Users` (`Id`),
+    CONSTRAINT `FK_Requests_Users_UpdatedById` FOREIGN KEY (`UpdatedById`) REFERENCES `Users` (`Id`) ON DELETE SET NULL
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `Roles` (
+    `Id` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `AccessLevel` int NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `Name` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `NormalizedName` varchar(256) CHARACTER SET utf8mb4 NULL,
+    `ConcurrencyStamp` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_Roles` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_Roles_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `UserClaims` (
+    `Id` int NOT NULL AUTO_INCREMENT,
+    `UserId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `ClaimType` longtext CHARACTER SET utf8mb4 NULL,
+    `ClaimValue` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_UserClaims` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_UserClaims_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `UserLogins` (
+    `LoginProvider` varchar(128) CHARACTER SET utf8mb4 NOT NULL,
+    `ProviderKey` varchar(128) CHARACTER SET utf8mb4 NOT NULL,
+    `ProviderDisplayName` longtext CHARACTER SET utf8mb4 NULL,
+    `UserId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_UserLogins` PRIMARY KEY (`LoginProvider`, `ProviderKey`),
+    CONSTRAINT `FK_UserLogins_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `UserTokens` (
+    `UserId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `LoginProvider` varchar(128) CHARACTER SET utf8mb4 NOT NULL,
+    `Name` varchar(128) CHARACTER SET utf8mb4 NOT NULL,
+    `Value` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_UserTokens` PRIMARY KEY (`UserId`, `LoginProvider`, `Name`),
+    CONSTRAINT `FK_UserTokens_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `QualificationFiles` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `QualificationId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `FilePath` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `FileName` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Size` bigint NOT NULL,
+    `ContentType` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    CONSTRAINT `PK_QualificationFiles` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_QualificationFiles_Qualifications_QualificationId` FOREIGN KEY (`QualificationId`) REFERENCES `Qualifications` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `RequestFiles` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `RequestId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `FilePath` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `FileName` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `Size` bigint NOT NULL,
+    `ContentType` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    CONSTRAINT `PK_RequestFiles` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_RequestFiles_Requests_RequestId` FOREIGN KEY (`RequestId`) REFERENCES `Requests` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `PostAudiences` (
+    `PostId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `RoleId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_PostAudiences` PRIMARY KEY (`PostId`, `RoleId`),
+    CONSTRAINT `FK_PostAudiences_Posts_PostId` FOREIGN KEY (`PostId`) REFERENCES `Posts` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_PostAudiences_Roles_RoleId` FOREIGN KEY (`RoleId`) REFERENCES `Roles` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `RoleClaims` (
+    `Id` int NOT NULL AUTO_INCREMENT,
+    `RoleId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `ClaimType` longtext CHARACTER SET utf8mb4 NULL,
+    `ClaimValue` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_RoleClaims` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_RoleClaims_Roles_RoleId` FOREIGN KEY (`RoleId`) REFERENCES `Roles` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `UserRoles` (
+    `UserId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    `RoleId` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+    CONSTRAINT `PK_UserRoles` PRIMARY KEY (`UserId`, `RoleId`),
+    CONSTRAINT `FK_UserRoles_Roles_RoleId` FOREIGN KEY (`RoleId`) REFERENCES `Roles` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_UserRoles_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+) CHARACTER SET=utf8mb4;
+
+CREATE INDEX `IX_ActivityLogs_UserId` ON `ActivityLogs` (`UserId`);
+
+CREATE INDEX `IX_Cantons_StateEntityId` ON `Cantons` (`StateEntityId`);
+
+CREATE INDEX `IX_Codebooks_CreatedById` ON `Codebooks` (`CreatedById`);
+
+CREATE INDEX `IX_CompanyBranches_CreatedById` ON `CompanyBranches` (`CreatedById`);
+
+CREATE INDEX `IX_CompanyBranches_MunicipalityId` ON `CompanyBranches` (`MunicipalityId`);
+
+CREATE INDEX `IX_CompanyBranches_OrganizationId` ON `CompanyBranches` (`OrganizationId`);
+
+CREATE INDEX `IX_CompanyRegisterTypes_OrganizationId` ON `CompanyRegisterTypes` (`OrganizationId`);
+
+CREATE UNIQUE INDEX `IX_DeviceCodes_DeviceCode` ON `DeviceCodes` (`DeviceCode`);
+
+CREATE INDEX `IX_DeviceCodes_Expiration` ON `DeviceCodes` (`Expiration`);
+
+CREATE INDEX `IX_EmailOptions_CreatedById` ON `EmailOptions` (`CreatedById`);
+
+CREATE INDEX `IX_EmploymentHistory_CertifiedTechnicianId` ON `EmploymentHistory` (`CertifiedTechnicianId`);
+
+CREATE INDEX `IX_EmploymentHistory_CompanyId` ON `EmploymentHistory` (`CompanyId`);
+
+CREATE INDEX `IX_EquipmentActivities_CreatedById` ON `EquipmentActivities` (`CreatedById`);
+
+CREATE INDEX `IX_EquipmentActivities_EquipmentId` ON `EquipmentActivities` (`EquipmentId`);
+
+CREATE INDEX `IX_EquipmentActivities_NewCoolantId` ON `EquipmentActivities` (`NewCoolantId`);
+
+CREATE INDEX `IX_EquipmentActivities_TypeOfChangeId` ON `EquipmentActivities` (`TypeOfChangeId`);
+
+CREATE INDEX `IX_EquipmentActivityFiles_EquipmentActivityId` ON `EquipmentActivityFiles` (`EquipmentActivityId`);
+
+CREATE INDEX `IX_EquipmentFiles_EquipmentId` ON `EquipmentFiles` (`EquipmentId`);
+
+CREATE INDEX `IX_Equipments_CompanyBranchId` ON `Equipments` (`CompanyBranchId`);
+
+CREATE INDEX `IX_Equipments_CreatedById` ON `Equipments` (`CreatedById`);
+
+CREATE INDEX `IX_Equipments_PurposeOfEquipmentId` ON `Equipments` (`PurposeOfEquipmentId`);
+
+CREATE INDEX `IX_Equipments_RefrigerantTypeId` ON `Equipments` (`RefrigerantTypeId`);
+
+CREATE INDEX `IX_Equipments_TypeOfCoolingSystemId` ON `Equipments` (`TypeOfCoolingSystemId`);
+
+CREATE INDEX `IX_Equipments_TypeOfEquipmentId` ON `Equipments` (`TypeOfEquipmentId`);
+
+CREATE INDEX `IX_Keys_Use` ON `Keys` (`Use`);
+
+CREATE INDEX `IX_Languages_I18nCodeId` ON `Languages` (`I18nCodeId`);
+
+CREATE INDEX `IX_Municipalities_CantonId` ON `Municipalities` (`CantonId`);
+
+CREATE INDEX `IX_Municipalities_StateEntityId` ON `Municipalities` (`StateEntityId`);
+
+CREATE INDEX `IX_Organizations_BusinessActivityId` ON `Organizations` (`BusinessActivityId`);
+
+CREATE INDEX `IX_Organizations_ContactPersonId` ON `Organizations` (`ContactPersonId`);
+
+CREATE INDEX `IX_Organizations_CreatedById` ON `Organizations` (`CreatedById`);
+
+CREATE UNIQUE INDEX `IX_Organizations_IdNumber` ON `Organizations` (`IdNumber`);
+
+CREATE UNIQUE INDEX `IX_Organizations_LicenseId` ON `Organizations` (`LicenseId`);
+
+CREATE INDEX `IX_Organizations_MunicipalityId` ON `Organizations` (`MunicipalityId`);
+
+CREATE INDEX `IX_Organizations_UpdatedById` ON `Organizations` (`UpdatedById`);
+
+CREATE INDEX `IX_PersistedGrants_ConsumedTime` ON `PersistedGrants` (`ConsumedTime`);
+
+CREATE INDEX `IX_PersistedGrants_Expiration` ON `PersistedGrants` (`Expiration`);
+
+CREATE INDEX `IX_PersistedGrants_SubjectId_ClientId_Type` ON `PersistedGrants` (`SubjectId`, `ClientId`, `Type`);
+
+CREATE INDEX `IX_PersistedGrants_SubjectId_SessionId_Type` ON `PersistedGrants` (`SubjectId`, `SessionId`, `Type`);
+
+CREATE INDEX `IX_PostAudiences_RoleId` ON `PostAudiences` (`RoleId`);
+
+CREATE INDEX `IX_Posts_CreatedById` ON `Posts` (`CreatedById`);
+
+CREATE INDEX `IX_QualificationFiles_QualificationId` ON `QualificationFiles` (`QualificationId`);
+
+CREATE INDEX `IX_Qualifications_CertifiedTechnicianId` ON `Qualifications` (`CertifiedTechnicianId`);
+
+CREATE INDEX `IX_Qualifications_CreatedById` ON `Qualifications` (`CreatedById`);
+
+CREATE INDEX `IX_Qualifications_QualificationTypeId` ON `Qualifications` (`QualificationTypeId`);
+
+CREATE INDEX `IX_Qualifications_TrainingCenterId` ON `Qualifications` (`TrainingCenterId`);
+
+CREATE INDEX `IX_RefrigerantTypes_CreatedById` ON `RefrigerantTypes` (`CreatedById`);
+
+CREATE INDEX `IX_RequestFiles_RequestId` ON `RequestFiles` (`RequestId`);
+
+CREATE INDEX `IX_Requests_BusinessActivityId` ON `Requests` (`BusinessActivityId`);
+
+CREATE INDEX `IX_Requests_CompanyId` ON `Requests` (`CompanyId`);
+
+CREATE INDEX `IX_Requests_CreatedById` ON `Requests` (`CreatedById`);
+
+CREATE INDEX `IX_Requests_MunicipalityId` ON `Requests` (`MunicipalityId`);
+
+CREATE UNIQUE INDEX `IX_Requests_RequestId` ON `Requests` (`RequestId`);
+
+CREATE INDEX `IX_Requests_ReviewedById` ON `Requests` (`ReviewedById`);
+
+CREATE INDEX `IX_Requests_UpdatedById` ON `Requests` (`UpdatedById`);
+
+CREATE INDEX `IX_RoleClaims_RoleId` ON `RoleClaims` (`RoleId`);
+
+CREATE INDEX `IX_Roles_CreatedById` ON `Roles` (`CreatedById`);
+
+CREATE UNIQUE INDEX `RoleNameIndex` ON `Roles` (`NormalizedName`);
+
+CREATE INDEX `IX_Translations_LanguageId` ON `Translations` (`LanguageId`);
+
+CREATE INDEX `IX_UserClaims_UserId` ON `UserClaims` (`UserId`);
+
+CREATE INDEX `IX_UserLogins_UserId` ON `UserLogins` (`UserId`);
+
+CREATE INDEX `IX_UserRoles_RoleId` ON `UserRoles` (`RoleId`);
+
+CREATE INDEX `EmailIndex` ON `Users` (`NormalizedEmail`);
+
+CREATE INDEX `IX_Users_CreatedById` ON `Users` (`CreatedById`);
+
+CREATE INDEX `IX_Users_LanguageId` ON `Users` (`LanguageId`);
+
+CREATE INDEX `IX_Users_MunicipalityId` ON `Users` (`MunicipalityId`);
+
+CREATE INDEX `IX_Users_OrganizationId` ON `Users` (`OrganizationId`);
+
+CREATE UNIQUE INDEX `UserNameIndex` ON `Users` (`NormalizedUserName`);
+
+ALTER TABLE `ActivityLogs` ADD CONSTRAINT `FK_ActivityLogs_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE `Codebooks` ADD CONSTRAINT `FK_Codebooks_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`);
+
+ALTER TABLE `CompanyBranches` ADD CONSTRAINT `FK_CompanyBranches_Organizations_OrganizationId` FOREIGN KEY (`OrganizationId`) REFERENCES `Organizations` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE `CompanyBranches` ADD CONSTRAINT `FK_CompanyBranches_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`);
+
+ALTER TABLE `CompanyRegisterTypes` ADD CONSTRAINT `FK_CompanyRegisterTypes_Organizations_OrganizationId` FOREIGN KEY (`OrganizationId`) REFERENCES `Organizations` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE `EmailOptions` ADD CONSTRAINT `FK_EmailOptions_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`);
+
+ALTER TABLE `EmploymentHistory` ADD CONSTRAINT `FK_EmploymentHistory_Organizations_CompanyId` FOREIGN KEY (`CompanyId`) REFERENCES `Organizations` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE `EmploymentHistory` ADD CONSTRAINT `FK_EmploymentHistory_Users_CertifiedTechnicianId` FOREIGN KEY (`CertifiedTechnicianId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE `EquipmentActivities` ADD CONSTRAINT `FK_EquipmentActivities_Equipments_EquipmentId` FOREIGN KEY (`EquipmentId`) REFERENCES `Equipments` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE `EquipmentActivities` ADD CONSTRAINT `FK_EquipmentActivities_RefrigerantTypes_NewCoolantId` FOREIGN KEY (`NewCoolantId`) REFERENCES `RefrigerantTypes` (`Id`);
+
+ALTER TABLE `EquipmentActivities` ADD CONSTRAINT `FK_EquipmentActivities_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE `EquipmentFiles` ADD CONSTRAINT `FK_EquipmentFiles_Equipments_EquipmentId` FOREIGN KEY (`EquipmentId`) REFERENCES `Equipments` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE `Equipments` ADD CONSTRAINT `FK_Equipments_RefrigerantTypes_RefrigerantTypeId` FOREIGN KEY (`RefrigerantTypeId`) REFERENCES `RefrigerantTypes` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE `Equipments` ADD CONSTRAINT `FK_Equipments_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE `Organizations` ADD CONSTRAINT `FK_Organizations_Users_ContactPersonId` FOREIGN KEY (`ContactPersonId`) REFERENCES `Users` (`Id`) ON DELETE SET NULL;
+
+ALTER TABLE `Organizations` ADD CONSTRAINT `FK_Organizations_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`) ON DELETE SET NULL;
+
+ALTER TABLE `Organizations` ADD CONSTRAINT `FK_Organizations_Users_UpdatedById` FOREIGN KEY (`UpdatedById`) REFERENCES `Users` (`Id`) ON DELETE SET NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231109102337_Innit', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `Translations` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Translations` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Translations` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Requests` ADD `HasPendingSyncFiles` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `RefrigerantTypes` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `RefrigerantTypes` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `RefrigerantTypes` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Qualifications` ADD `HasPendingSyncFiles` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Organizations` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Organizations` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Organizations` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Municipalities` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Municipalities` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Municipalities` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Languages` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Languages` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Languages` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Equipments` ADD `HasPendingSyncFiles` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `EquipmentActivities` ADD `HasPendingSyncFiles` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Codebooks` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Codebooks` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Codebooks` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Cantons` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Cantons` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Cantons` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231111183524_UpdatedSyncBase', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `CompanyRegisterTypes` MODIFY COLUMN `Id` char(36) COLLATE ascii_general_ci NOT NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231112221821_CommitName', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `Requests` DROP INDEX `IX_Requests_RequestId`;
+
+ALTER TABLE `Requests` MODIFY COLUMN `RequestId` longtext CHARACTER SET utf8mb4 NOT NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231112230215_RemoveIsUniqueFromRequestId', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `Qualifications` ADD `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `Qualifications` ADD `LastSyncAt` datetime(6) NULL;
+
+ALTER TABLE `Qualifications` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Qualifications` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Qualifications` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Qualifications` ADD `SyncToken` char(36) COLLATE ascii_general_ci NULL;
+
+ALTER TABLE `Equipments` ADD `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `Equipments` ADD `LastSyncAt` datetime(6) NULL;
+
+ALTER TABLE `Equipments` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Equipments` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Equipments` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `Equipments` ADD `SyncToken` char(36) COLLATE ascii_general_ci NULL;
+
+ALTER TABLE `EquipmentActivities` ADD `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `EquipmentActivities` ADD `LastSyncAt` datetime(6) NULL;
+
+ALTER TABLE `EquipmentActivities` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `EquipmentActivities` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `EquipmentActivities` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `EquipmentActivities` ADD `SyncToken` char(36) COLLATE ascii_general_ci NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231114210917_SyncDataAddedToEquipment', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `FailedSynchronizations` ADD `NotificationHandlerModel` longtext CHARACTER SET utf8mb4 NOT NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231118082051_NewColOnFailedSync', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `EmploymentHistory` ADD `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `EmploymentHistory` ADD `LastSyncAt` datetime(6) NULL;
+
+ALTER TABLE `EmploymentHistory` ADD `NeedsBetaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `EmploymentHistory` ADD `NeedsDeltaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `EmploymentHistory` ADD `NeedsGammaSync` tinyint(1) NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `EmploymentHistory` ADD `SyncToken` char(36) COLLATE ascii_general_ci NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231118120932_EmploymentSyncBaseAdded', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `Translations` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `Translations` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `Translations` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `RefrigerantTypes` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `RefrigerantTypes` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `RefrigerantTypes` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `Qualifications` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `Qualifications` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `Qualifications` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `Organizations` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `Organizations` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `Organizations` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `Municipalities` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `Municipalities` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `Municipalities` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `Languages` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `Languages` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `Languages` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `Equipments` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `Equipments` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `Equipments` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `EquipmentActivities` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `EquipmentActivities` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `EquipmentActivities` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `EmploymentHistory` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `EmploymentHistory` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `EmploymentHistory` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `Codebooks` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `Codebooks` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `Codebooks` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `Cantons` DROP COLUMN `NeedsBetaSync`;
+
+ALTER TABLE `Cantons` DROP COLUMN `NeedsDeltaSync`;
+
+ALTER TABLE `Cantons` DROP COLUMN `NeedsGammaSync`;
+
+ALTER TABLE `Translations` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `RefrigerantTypes` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `Qualifications` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `Organizations` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `Municipalities` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `Languages` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `Equipments` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `EquipmentActivities` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `EmploymentHistory` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `Codebooks` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `Cantons` ADD `SyncAction` int NOT NULL DEFAULT 0;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231118124319_RemovedNeedsSync', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `Equipments` DROP COLUMN `ActionTakenBy`;
+
+ALTER TABLE `Equipments` DROP COLUMN `LastSyncAt`;
+
+ALTER TABLE `Equipments` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `Equipments` DROP COLUMN `SyncToken`;
+
+ALTER TABLE `EquipmentActivities` DROP COLUMN `ActionTakenBy`;
+
+ALTER TABLE `EquipmentActivities` DROP COLUMN `LastSyncAt`;
+
+ALTER TABLE `EquipmentActivities` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `EquipmentActivities` DROP COLUMN `SyncToken`;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231118194858_RemovedNeedsSyncToEquipment', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `FileSynchronizations` ADD `FileName` longtext CHARACTER SET utf8mb4 NOT NULL;
+
+ALTER TABLE `FileSynchronizations` ADD `RelatedEntityId` char(36) COLLATE ascii_general_ci NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231119135937_FileSyncUpdated', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `Translations` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `RefrigerantTypes` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `Qualifications` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `Organizations` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `Municipalities` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `Languages` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `EmploymentHistory` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `Codebooks` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `Cantons` DROP COLUMN `SyncAction`;
+
+ALTER TABLE `QualificationFiles` ADD `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `QualificationFiles` ADD `LastSyncAt` datetime(6) NULL;
+
+ALTER TABLE `QualificationFiles` ADD `SyncToken` char(36) COLLATE ascii_general_ci NULL;
+
+ALTER TABLE `Equipments` ADD `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `Equipments` ADD `LastSyncAt` datetime(6) NULL;
+
+ALTER TABLE `Equipments` ADD `SyncToken` char(36) COLLATE ascii_general_ci NULL;
+
+ALTER TABLE `EquipmentFiles` ADD `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `EquipmentFiles` ADD `LastSyncAt` datetime(6) NULL;
+
+ALTER TABLE `EquipmentFiles` ADD `SyncToken` char(36) COLLATE ascii_general_ci NULL;
+
+ALTER TABLE `EquipmentActivityFiles` ADD `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `EquipmentActivityFiles` ADD `LastSyncAt` datetime(6) NULL;
+
+ALTER TABLE `EquipmentActivityFiles` ADD `SyncToken` char(36) COLLATE ascii_general_ci NULL;
+
+ALTER TABLE `EquipmentActivities` ADD `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `EquipmentActivities` ADD `LastSyncAt` datetime(6) NULL;
+
+ALTER TABLE `EquipmentActivities` ADD `SyncToken` char(36) COLLATE ascii_general_ci NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231119180634_EquipmentFileSync', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231120210657_EquipmentFileSync2', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `CompanyBranches` ADD `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `CompanyBranches` ADD `LastSyncAt` datetime(6) NULL;
+
+ALTER TABLE `CompanyBranches` ADD `SyncToken` char(36) COLLATE ascii_general_ci NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231125190820_CompanyBranchSync', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `Codebooks` ADD `InternalCode` longtext CHARACTER SET utf8mb4 NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231127224149_CodebooksInternalCode', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `Equipments` DROP FOREIGN KEY `FK_Equipments_RefrigerantTypes_RefrigerantTypeId`;
+
+ALTER TABLE `Equipments` MODIFY COLUMN `RefrigerantTypeId` char(36) COLLATE ascii_general_ci NULL;
+
+ALTER TABLE `Equipments` ADD CONSTRAINT `FK_Equipments_RefrigerantTypes_RefrigerantTypeId` FOREIGN KEY (`RefrigerantTypeId`) REFERENCES `RefrigerantTypes` (`Id`);
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231127230731_CoodebooksNewCoolant', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `Organizations` ADD `Status` int NOT NULL DEFAULT 1;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20231210202500_AddedStatusToOrg', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `FailedSynchronizations` ADD `Signature` longtext CHARACTER SET utf8mb4 NOT NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20240520082122_AddSignatureToFallbackTable', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20240521192005_Fallback', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `FailedSynchronizations` ADD `DateSucceeded` datetime(6) NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20240526083704_FallbackTableChange', '7.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `RefrigerantTypes` ADD `ChemicalFormula` longtext CHARACTER SET utf8mb4 NULL;
+
+CREATE TABLE `ImportExportSubstancesReport` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Year` int NOT NULL,
+    `ResponsiblePerson` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `SubmitedDate` datetime(6) NULL,
+    `OrganizationId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `UserId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `UserId1` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `IsArchived` tinyint(1) NOT NULL,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_ImportExportSubstancesReport` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_ImportExportSubstancesReport_Organizations_OrganizationId` FOREIGN KEY (`OrganizationId`) REFERENCES `Organizations` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_ImportExportSubstancesReport_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`),
+    CONSTRAINT `FK_ImportExportSubstancesReport_Users_UserId1` FOREIGN KEY (`UserId1`) REFERENCES `Users` (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `ServiceTechnicianReport` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Year` int NOT NULL,
+    `ResponsiblePerson` longtext CHARACTER SET utf8mb4 NOT NULL,
+    `SubmitedDate` datetime(6) NULL,
+    `OrganizationId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `UserId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `UserId1` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `IsArchived` tinyint(1) NOT NULL,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_ServiceTechnicianReport` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_ServiceTechnicianReport_Organizations_OrganizationId` FOREIGN KEY (`OrganizationId`) REFERENCES `Organizations` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_ServiceTechnicianReport_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`),
+    CONSTRAINT `FK_ServiceTechnicianReport_Users_UserId1` FOREIGN KEY (`UserId1`) REFERENCES `Users` (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `ImportExportSubstancesAnnualReport` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `ImportExportSubstancesReportId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `RefrigerantTypeId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `TariffNumber` decimal(65,30) NULL,
+    `Import` decimal(65,30) NULL,
+    `OwnConsumption` decimal(65,30) NULL,
+    `SalesOnTheBiHMarket` decimal(65,30) NULL,
+    `TotalExportedQuantity` decimal(65,30) NULL,
+    `StockBalanceOnTheDay` decimal(65,30) NULL,
+    `EndUser` longtext CHARACTER SET utf8mb4 NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `IsArchived` tinyint(1) NOT NULL,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_ImportExportSubstancesAnnualReport` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_ImportExportSubstancesAnnualReport_ImportExportSubstancesRep~` FOREIGN KEY (`ImportExportSubstancesReportId`) REFERENCES `ImportExportSubstancesReport` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_ImportExportSubstancesAnnualReport_RefrigerantTypes_Refriger~` FOREIGN KEY (`RefrigerantTypeId`) REFERENCES `RefrigerantTypes` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_ImportExportSubstancesAnnualReport_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE TABLE `ServiceTechnicianAnnualReport` (
+    `Id` char(36) COLLATE ascii_general_ci NOT NULL,
+    `ServiceTechnicianReportId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `RefrigerantTypeId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `Purchased` decimal(65,30) NULL,
+    `Collected` decimal(65,30) NULL,
+    `Renewed` decimal(65,30) NULL,
+    `Sold` decimal(65,30) NULL,
+    `Used1` decimal(65,30) NULL,
+    `Used2` decimal(65,30) NULL,
+    `Used3` decimal(65,30) NULL,
+    `Used4` decimal(65,30) NULL,
+    `StateOfSubstanceId` char(36) COLLATE ascii_general_ci NOT NULL,
+    `StockBalance` decimal(65,30) NULL,
+    `CreatedAt` datetime(6) NOT NULL,
+    `CreatedById` varchar(255) CHARACTER SET utf8mb4 NULL,
+    `UpdatedAt` datetime(6) NULL,
+    `UpdatedById` longtext CHARACTER SET utf8mb4 NULL,
+    `IsDeleted` tinyint(1) NOT NULL,
+    `IsArchived` tinyint(1) NOT NULL,
+    `SyncToken` char(36) COLLATE ascii_general_ci NULL,
+    `LastSyncAt` datetime(6) NULL,
+    `ActionTakenBy` longtext CHARACTER SET utf8mb4 NULL,
+    CONSTRAINT `PK_ServiceTechnicianAnnualReport` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_ServiceTechnicianAnnualReport_RefrigerantTypes_RefrigerantTy~` FOREIGN KEY (`RefrigerantTypeId`) REFERENCES `RefrigerantTypes` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_ServiceTechnicianAnnualReport_ServiceTechnicianReport_Servic~` FOREIGN KEY (`ServiceTechnicianReportId`) REFERENCES `ServiceTechnicianReport` (`Id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_ServiceTechnicianAnnualReport_Users_CreatedById` FOREIGN KEY (`CreatedById`) REFERENCES `Users` (`Id`)
+) CHARACTER SET=utf8mb4;
+
+CREATE INDEX `IX_ImportExportSubstancesAnnualReport_CreatedById` ON `ImportExportSubstancesAnnualReport` (`CreatedById`);
+
+CREATE INDEX `IX_ImportExportSubstancesAnnualReport_ImportExportSubstancesRep~` ON `ImportExportSubstancesAnnualReport` (`ImportExportSubstancesReportId`);
+
+CREATE INDEX `IX_ImportExportSubstancesAnnualReport_RefrigerantTypeId` ON `ImportExportSubstancesAnnualReport` (`RefrigerantTypeId`);
+
+CREATE INDEX `IX_ImportExportSubstancesReport_CreatedById` ON `ImportExportSubstancesReport` (`CreatedById`);
+
+CREATE INDEX `IX_ImportExportSubstancesReport_OrganizationId` ON `ImportExportSubstancesReport` (`OrganizationId`);
+
+CREATE INDEX `IX_ImportExportSubstancesReport_UserId1` ON `ImportExportSubstancesReport` (`UserId1`);
+
+CREATE INDEX `IX_ServiceTechnicianAnnualReport_CreatedById` ON `ServiceTechnicianAnnualReport` (`CreatedById`);
+
+CREATE INDEX `IX_ServiceTechnicianAnnualReport_RefrigerantTypeId` ON `ServiceTechnicianAnnualReport` (`RefrigerantTypeId`);
+
+CREATE INDEX `IX_ServiceTechnicianAnnualReport_ServiceTechnicianReportId` ON `ServiceTechnicianAnnualReport` (`ServiceTechnicianReportId`);
+
+CREATE INDEX `IX_ServiceTechnicianReport_CreatedById` ON `ServiceTechnicianReport` (`CreatedById`);
+
+CREATE INDEX `IX_ServiceTechnicianReport_OrganizationId` ON `ServiceTechnicianReport` (`OrganizationId`);
+
+CREATE INDEX `IX_ServiceTechnicianReport_UserId1` ON `ServiceTechnicianReport` (`UserId1`);
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20240603110449_ServiceTechnicianReport', '7.0.13');
+
+COMMIT;
+

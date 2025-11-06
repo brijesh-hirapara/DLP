@@ -1,0 +1,112 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Modules\**" />
+    <EmbeddedResource Remove="Modules\**" />
+    <None Remove="Modules\**" />
+    <None Remove="CertifiedTechnicians\DTOs\" />
+    <None Remove="Equipments\Queries\" />
+    <None Remove="RefrigerantTypes\Queries\" />
+    <None Remove="RefrigerantTypes\Commands\" />
+    <None Remove="Newsfeed\" />
+    <None Remove="Newsfeed\Commands\" />
+    <None Remove="Newsfeed\Queries\" />
+    <None Remove="Newsfeed\DTOs\" />
+    <None Remove="Reports\" />
+    <None Remove="Reports\DTOs\" />
+    <None Remove="Reports\Queries\" />
+    <None Remove="Municipalities\Commands\" />
+    <None Remove="Municipalities\Notifications\" />
+    <None Remove="Codebooks\Notifications\" />
+    <None Remove="RefrigerantTypes\Notifications\" />
+    <None Remove="Cantons\Notifications\" />
+    <None Remove="Translations\Notifications\" />
+    <None Remove="Languages\Notifications\" />
+    <None Remove="OtherContexts\" />
+    <None Remove="Users\Notifications\" />
+    <None Remove="CertifiedTechnicians\Notifications\" />
+    <None Remove="Qualifications\Notifications\" />
+    <None Remove="Codebooks\Commands\" />
+    <None Remove="Common\Utility\" />
+    <None Remove="Common\Notifications\" />
+    <None Remove="Equipments\Notifications\" />
+    <None Remove="CompanyBranches\Notifications\" />
+    <None Remove="Dashboard\" />
+    <None Remove="Dashboard\Queries\" />
+    <None Remove="Dashboard\DTOs\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.102.3" />
+    <PackageReference Include="EPPlus" Version="7.0.9" />
+    <PackageReference Include="FluentValidation" Version="11.5.2" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.2" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.2" />
+    <PackageReference Include="Hangfire.MySqlStorage" Version="2.0.3" />
+    <PackageReference Include="iTextSharp" Version="5.5.13.4" />
+    <PackageReference Include="LinqKit" Version="1.2.4" />
+    <PackageReference Include="Mapster" Version="7.3.0" />
+    <PackageReference Include="Mapster.DependencyInjection" Version="1.0.0" />
+    <PackageReference Include="MediatR" Version="12.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
+    <PackageReference Include="morelinq" Version="4.0.0" />
+    <PackageReference Include="MoreLinq.Source.MoreEnumerable.Batch" Version="1.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.31.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="MediatR.Extensions.Autofac.DependencyInjection" Version="11.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DLP.Domain\DLP.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Municipalities\" />
+    <None Remove="StateEntities\" />
+    <None Remove="Cantons\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="StateEntities\" />
+    <Folder Include="CertifiedTechnicians\DTOs\" />
+    <Folder Include="RefrigerantTypes\Queries\" />
+    <Folder Include="RefrigerantTypes\Commands\" />
+    <Folder Include="Newsfeed\" />
+    <Folder Include="Newsfeed\Commands\" />
+    <Folder Include="Newsfeed\Queries\" />
+    <Folder Include="Newsfeed\DTOs\" />
+    <Folder Include="Reports\" />
+    <Folder Include="Reports\DTOs\" />
+    <Folder Include="Reports\Queries\" />
+    <Folder Include="Municipalities\Commands\" />
+    <Folder Include="Municipalities\Notifications\" />
+    <Folder Include="Codebooks\Notifications\" />
+    <Folder Include="RefrigerantTypes\Notifications\" />
+    <Folder Include="Cantons\Notifications\" />
+    <Folder Include="Translations\Notifications\" />
+    <Folder Include="Languages\Notifications\" />
+    <Folder Include="OtherContexts\" />
+    <Folder Include="Users\Notifications\" />
+    <Folder Include="CertifiedTechnicians\Notifications\" />
+    <Folder Include="Qualifications\Notifications\" />
+    <Folder Include="Codebooks\Commands\" />
+    <Folder Include="Equipments\Notifications\" />
+    <Folder Include="CompanyBranches\Notifications\" />
+    <Folder Include="Dashboard\" />
+    <Folder Include="Dashboard\Queries\" />
+    <Folder Include="Dashboard\DTOs\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Common\Templates\Models\CarrierUserViewModel.cs" />
+    <None Include="Common\Templates\Models\RequestSubmittedVehicleFleetViewModel.cs" />
+  </ItemGroup>
+</Project>

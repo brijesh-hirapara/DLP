@@ -1,0 +1,35 @@
+﻿@model DLP.Application.Common.Templates.Models.CompanyRejectedViewModel;
+@using DLP.HtmlHelpers;
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>
+        Application Declined
+    </title>
+</head>
+<body>
+    <div style='max-width: 500px; margin: 0 auto; background-color: #f2f2f2; padding: 20px;'>
+        <p>
+            <span>@await Html.Translate("company-rejected:entry.text", "Dear", Model.UserLang) @Model.ContactName from @Model.CompanyName,</span>
+        </p>
+        <br />
+        <p>
+            <span>@await Html.Translate("company-rejected:email.header", "We regret to inform you that your company application has been declined. If you believe this is a mistake or have further inquiries, please reach out to our support team.", Model.UserLang)</span>
+        </p>
+        <br />
+        <p>
+            <span>@await Html.Translate("company-rejected:more-info", "For more details regarding the rejection, or to discuss further steps, please contact our customer service or visit our FAQ section.", Model.UserLang)</span>
+        </p>
+        <br />
+        <p>
+            <span>@await Html.Translate("company-rejected:ignore.email", "If you didn't submit an application, please ignore this email.", Model.UserLang)</span>
+        </p>
+        <br />
+        <p style='text-align: center; color: #888888; margin-top: 20px;'>
+            <span>@await Html.Translate("company-rejected:greetings", "Thank you for understanding", Model.UserLang)</span>
+        </p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,857 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
+    <IsPackable>false</IsPackable>
+    <SpaRoot>ClientApp\</SpaRoot>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
+    <SpaProxyServerUrl>https://localhost:44460</SpaProxyServerUrl>
+    <!--<SpaProxyServerUrl>https://dlp.sparkleweb.co.in</SpaProxyServerUrl>-->
+    <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>3c751778-8b37-4243-a90c-67c7aa80b464</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'DLP_SRPSKA' " />
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'DLP_FBIH' " />
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'DLP_BRCKO' " />
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'DLP_LOCAL' " />
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.102.3" />
+    <PackageReference Include="EPPlus" Version="7.0.9" />
+    <PackageReference Include="iTextSharp" Version="5.5.13.4" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="7.0.8" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.2" />
+    <PackageReference Include="Hangfire.MySqlStorage" Version="2.0.3" />
+
+    <PackageReference Include="Microsoft.AspNetCore.ApiAuthorization.IdentityServer" Version="7.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="7.0.13" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.7" />
+    <PackageReference Include="Razor.Templating.Core" Version="1.9.0" />
+    <PackageReference Include="Seq.Extensions.Logging" Version="6.1.0" />
+    <PackageReference Include="Serilog" Version="3.0.1" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Don't publish the SPA source files, but do show them in the project files list -->
+    <Compile Remove="ClientApp\**" />
+    <Compile Remove="wwwroot\guidelines\**" />
+    <Content Remove="$(SpaRoot)**" />
+    <Content Remove="ClientApp\**" />
+    <Content Remove="wwwroot\guidelines\**" />
+    <EmbeddedResource Remove="ClientApp\**" />
+    <EmbeddedResource Remove="wwwroot\guidelines\**" />
+    <EntityDeploy Remove="ClientApp\**" />
+    <EntityDeploy Remove="wwwroot\guidelines\**" />
+    <None Remove="$(SpaRoot)**" />
+    <None Remove="ClientApp\**" />
+    <None Remove="wwwroot\guidelines\**" />
+    <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="ClientApp\.env" />
+    <None Remove="ClientApp\.env.development" />
+    <None Remove="ClientApp\.env.development.local" />
+    <None Remove="ClientApp\.gitignore" />
+    <None Remove="ClientApp\aspnetcore-https.js" />
+    <None Remove="ClientApp\aspnetcore-react.js" />
+    <None Remove="ClientApp\craco.config.js" />
+    <None Remove="ClientApp\customize-cra-config.js" />
+    <None Remove="ClientApp\global.d.ts" />
+    <None Remove="ClientApp\openapitools.json" />
+    <None Remove="ClientApp\package-lock.json" />
+    <None Remove="ClientApp\package.json" />
+    <None Remove="ClientApp\public\favicon.ico" />
+    <None Remove="ClientApp\public\index.html" />
+    <None Remove="ClientApp\public\manifest.json" />
+    <None Remove="ClientApp\README.md" />
+    <None Remove="ClientApp\src\api\.gitignore" />
+    <None Remove="ClientApp\src\api\.npmignore" />
+    <None Remove="ClientApp\src\api\.openapi-generator-ignore" />
+    <None Remove="ClientApp\src\api\.openapi-generator\FILES" />
+    <None Remove="ClientApp\src\api\.openapi-generator\VERSION" />
+    <None Remove="ClientApp\src\api\api.ts" />
+    <None Remove="ClientApp\src\api\axiosIntercept.ts" />
+    <None Remove="ClientApp\src\api\base.ts" />
+    <None Remove="ClientApp\src\api\clients\access-level-api.ts" />
+    <None Remove="ClientApp\src\api\clients\activity-logs-api.ts" />
+    <None Remove="ClientApp\src\api\clients\auth-api.ts" />
+    <None Remove="ClientApp\src\api\clients\cantons-api.ts" />
+    <None Remove="ClientApp\src\api\clients\certified-technicians-api.ts" />
+    <None Remove="ClientApp\src\api\clients\codebook-api.ts" />
+    <None Remove="ClientApp\src\api\clients\company-branch-api.ts" />
+    <None Remove="ClientApp\src\api\clients\company-branches-api.ts" />
+    <None Remove="ClientApp\src\api\clients\dashboard-api.ts" />
+    <None Remove="ClientApp\src\api\clients\db-connection-health-api.ts" />
+    <None Remove="ClientApp\src\api\clients\email-options-api.ts" />
+    <None Remove="ClientApp\src\api\clients\equipments-api.ts" />
+    <None Remove="ClientApp\src\api\clients\functionalities-api.ts" />
+    <None Remove="ClientApp\src\api\clients\index.ts" />
+    <None Remove="ClientApp\src\api\clients\kghapi.ts" />
+    <None Remove="ClientApp\src\api\clients\languages-api.ts" />
+    <None Remove="ClientApp\src\api\clients\modules-api.ts" />
+    <None Remove="ClientApp\src\api\clients\municipalities-api.ts" />
+    <None Remove="ClientApp\src\api\clients\newsfeed-api.ts" />
+    <None Remove="ClientApp\src\api\clients\oidc-configuration-api.ts" />
+    <None Remove="ClientApp\src\api\clients\organizations-api.ts" />
+    <None Remove="ClientApp\src\api\clients\public-api.ts" />
+    <None Remove="ClientApp\src\api\clients\refrigerant-types-api.ts" />
+    <None Remove="ClientApp\src\api\clients\registers-api.ts" />
+    <None Remove="ClientApp\src\api\clients\reports-api.ts" />
+    <None Remove="ClientApp\src\api\clients\requests-api.ts" />
+    <None Remove="ClientApp\src\api\clients\state-entities-api.ts" />
+    <None Remove="ClientApp\src\api\clients\sync-api.ts" />
+    <None Remove="ClientApp\src\api\clients\translations-api.ts" />
+    <None Remove="ClientApp\src\api\clients\user-groups-api.ts" />
+    <None Remove="ClientApp\src\api\clients\users-api.ts" />
+    <None Remove="ClientApp\src\api\common.ts" />
+    <None Remove="ClientApp\src\api\configuration.ts" />
+    <None Remove="ClientApp\src\api\git_push.sh" />
+    <None Remove="ClientApp\src\api\index.ts" />
+    <None Remove="ClientApp\src\api\models\access-level-dto.ts" />
+    <None Remove="ClientApp\src\api\models\access-level-type.ts" />
+    <None Remove="ClientApp\src\api\models\account-profile-dto.ts" />
+    <None Remove="ClientApp\src\api\models\activity-log-dto.ts" />
+    <None Remove="ClientApp\src\api\models\add-codebook-command.ts" />
+    <None Remove="ClientApp\src\api\models\add-functionality-command.ts" />
+    <None Remove="ClientApp\src\api\models\add-language-command.ts" />
+    <None Remove="ClientApp\src\api\models\add-module-command.ts" />
+    <None Remove="ClientApp\src\api\models\add-new-canton-command.ts" />
+    <None Remove="ClientApp\src\api\models\add-new-municipality-command.ts" />
+    <None Remove="ClientApp\src\api\models\add-user-group-command.ts" />
+    <None Remove="ClientApp\src\api\models\add-user-group-permission.ts" />
+    <None Remove="ClientApp\src\api\models\add-user-to-group-command.ts" />
+    <None Remove="ClientApp\src\api\models\approve-request-dto.ts" />
+    <None Remove="ClientApp\src\api\models\area-of-expertise-enum.ts" />
+    <None Remove="ClientApp\src\api\models\area-of-expertise.ts" />
+    <None Remove="ClientApp\src\api\models\assign-user-to-group-dto.ts" />
+    <None Remove="ClientApp\src\api\models\branch-with-equipments-details-dto.ts" />
+    <None Remove="ClientApp\src\api\models\canton-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\canton-dto-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\canton-dto.ts" />
+    <None Remove="ClientApp\src\api\models\certificate-number-availability-result.ts" />
+    <None Remove="ClientApp\src\api\models\certified-technician-dto-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\certified-technician-dto.ts" />
+    <None Remove="ClientApp\src\api\models\check-certificate-number-availability-query.ts" />
+    <None Remove="ClientApp\src\api\models\codebook-dto-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\codebook-dto.ts" />
+    <None Remove="ClientApp\src\api\models\codebook-type-enum.ts" />
+    <None Remove="ClientApp\src\api\models\company-branch-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\company-branch-dto-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\company-branch-dto.ts" />
+    <None Remove="ClientApp\src\api\models\company-by-entity-report-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\company-by-entity-report-dto.ts" />
+    <None Remove="ClientApp\src\api\models\company-entrepreneur-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\company-entrepreneur-dto.ts" />
+    <None Remove="ClientApp\src\api\models\company-type.ts" />
+    <None Remove="ClientApp\src\api\models\create-certified-technician-command.ts" />
+    <None Remove="ClientApp\src\api\models\create-certified-technician-dto.ts" />
+    <None Remove="ClientApp\src\api\models\create-company-branch-command.ts" />
+    <None Remove="ClientApp\src\api\models\create-company-branch-request.ts" />
+    <None Remove="ClientApp\src\api\models\create-equipment-activity-command.ts" />
+    <None Remove="ClientApp\src\api\models\create-equipment-command.ts" />
+    <None Remove="ClientApp\src\api\models\create-new-email-options-command.ts" />
+    <None Remove="ClientApp\src\api\models\create-new-post-command.ts" />
+    <None Remove="ClientApp\src\api\models\create-refrigerant-type-command.ts" />
+    <None Remove="ClientApp\src\api\models\create-request-dto.ts" />
+    <None Remove="ClientApp\src\api\models\create-state-entity-command.ts" />
+    <None Remove="ClientApp\src\api\models\create-user-command.ts" />
+    <None Remove="ClientApp\src\api\models\edit-module-command.ts" />
+    <None Remove="ClientApp\src\api\models\edit-user-group-command.ts" />
+    <None Remove="ClientApp\src\api\models\email-options-dto.ts" />
+    <None Remove="ClientApp\src\api\models\employment-history-dto.ts" />
+    <None Remove="ClientApp\src\api\models\equipment-activity-dto.ts" />
+    <None Remove="ClientApp\src\api\models\equipment-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\equipment-dto.ts" />
+    <None Remove="ClientApp\src\api\models\file-result-dto.ts" />
+    <None Remove="ClientApp\src\api\models\filter-type-dto.ts" />
+    <None Remove="ClientApp\src\api\models\forgot-password-command.ts" />
+    <None Remove="ClientApp\src\api\models\functionality-dto.ts" />
+    <None Remove="ClientApp\src\api\models\get-activity-logs-query.ts" />
+    <None Remove="ClientApp\src\api\models\get-codebooks-by-type-query.ts" />
+    <None Remove="ClientApp\src\api\models\get-registers-for-public-query.ts" />
+    <None Remove="ClientApp\src\api\models\get-users-query.ts" />
+    <None Remove="ClientApp\src\api\models\group-overview-dto.ts" />
+    <None Remove="ClientApp\src\api\models\group-user-dto.ts" />
+    <None Remove="ClientApp\src\api\models\guid-report-response-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\guid-report-response-dto.ts" />
+    <None Remove="ClientApp\src\api\models\i18n-language-code-dto.ts" />
+    <None Remove="ClientApp\src\api\models\i18n-language-code.ts" />
+    <None Remove="ClientApp\src\api\models\importer-exporter-company-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\importer-exporter-company-dto.ts" />
+    <None Remove="ClientApp\src\api\models\index.ts" />
+    <None Remove="ClientApp\src\api\models\institution-request.ts" />
+    <None Remove="ClientApp\src\api\models\int32-report-response-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\int32-report-response-dto.ts" />
+    <None Remove="ClientApp\src\api\models\kghservice-company-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\kghservice-company-dto.ts" />
+    <None Remove="ClientApp\src\api\models\language-dto.ts" />
+    <None Remove="ClientApp\src\api\models\language-for-ui-dto.ts" />
+    <None Remove="ClientApp\src\api\models\language.ts" />
+    <None Remove="ClientApp\src\api\models\list-request-dto-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\list-request-dto.ts" />
+    <None Remove="ClientApp\src\api\models\login-command.ts" />
+    <None Remove="ClientApp\src\api\models\login-response.ts" />
+    <None Remove="ClientApp\src\api\models\marked-equipment-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\marked-equipment-dto.ts" />
+    <None Remove="ClientApp\src\api\models\module-functionalities-dto.ts" />
+    <None Remove="ClientApp\src\api\models\municipality-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\municipality-dto-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\municipality-dto.ts" />
+    <None Remove="ClientApp\src\api\models\object-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\organization-dto-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\organization-dto.ts" />
+    <None Remove="ClientApp\src\api\models\organization-request.ts" />
+    <None Remove="ClientApp\src\api\models\organization-status.ts" />
+    <None Remove="ClientApp\src\api\models\organization-type-enum.ts" />
+    <None Remove="ClientApp\src\api\models\owner-operator-of-equipment-details-dto.ts" />
+    <None Remove="ClientApp\src\api\models\owner-operator-of-equipment-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\owner-operator-of-equipment-dto.ts" />
+    <None Remove="ClientApp\src\api\models\post-dto.ts" />
+    <None Remove="ClientApp\src\api\models\qualification-dto.ts" />
+    <None Remove="ClientApp\src\api\models\record-employment-dto.ts" />
+    <None Remove="ClientApp\src\api\models\refresh-token-request.ts" />
+    <None Remove="ClientApp\src\api\models\refrigerant-type-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\refrigerant-type-dto.ts" />
+    <None Remove="ClientApp\src\api\models\register-command.ts" />
+    <None Remove="ClientApp\src\api\models\register-details-dto.ts" />
+    <None Remove="ClientApp\src\api\models\register-for-public-dto.ts" />
+    <None Remove="ClientApp\src\api\models\reports-general-dto.ts" />
+    <None Remove="ClientApp\src\api\models\reports-general-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\request-company-type.ts" />
+    <None Remove="ClientApp\src\api\models\request-details-dto.ts" />
+    <None Remove="ClientApp\src\api\models\request-file-dto.ts" />
+    <None Remove="ClientApp\src\api\models\request-status.ts" />
+    <None Remove="ClientApp\src\api\models\request-type.ts" />
+    <None Remove="ClientApp\src\api\models\resend-email-confirmation-command.ts" />
+    <None Remove="ClientApp\src\api\models\reset-password-command.ts" />
+    <None Remove="ClientApp\src\api\models\reset-password-request.ts" />
+    <None Remove="ClientApp\src\api\models\set-new-password-request.ts" />
+    <None Remove="ClientApp\src\api\models\sorting-by.ts" />
+    <None Remove="ClientApp\src\api\models\state-entity-dto-ordinal-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\state-entity-dto-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\state-entity-dto.ts" />
+    <None Remove="ClientApp\src\api\models\technician-for-activity-dto.ts" />
+    <None Remove="ClientApp\src\api\models\test-smtp-connection-command.ts" />
+    <None Remove="ClientApp\src\api\models\toggle-user-activate-command.ts" />
+    <None Remove="ClientApp\src\api\models\translation-dto.ts" />
+    <None Remove="ClientApp\src\api\models\translation.ts" />
+    <None Remove="ClientApp\src\api\models\update-canton-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-codebook-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-company-branch-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-email-options-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-equipment-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-language-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-language-request.ts" />
+    <None Remove="ClientApp\src\api\models\update-municipality-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-profile-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-refrigerant-type-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-state-entity-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-user-command.ts" />
+    <None Remove="ClientApp\src\api\models\update-user-profile-command.ts" />
+    <None Remove="ClientApp\src\api\models\user-dto-paginated-list.ts" />
+    <None Remove="ClientApp\src\api\models\user-dto.ts" />
+    <None Remove="ClientApp\src\api\models\user-filter-type.ts" />
+    <None Remove="ClientApp\src\api\models\user-group-details-dto.ts" />
+    <None Remove="ClientApp\src\api\models\user-group-permission.ts" />
+    <None Remove="ClientApp\src\App.tsx" />
+    <None Remove="ClientApp\src\components\alerts\alerts.js" />
+    <None Remove="ClientApp\src\components\alerts\styled.js" />
+    <None Remove="ClientApp\src\components\autoComplete\autoComplete.js" />
+    <None Remove="ClientApp\src\components\autoComplete\style.js" />
+    <None Remove="ClientApp\src\components\banners\Banners.js" />
+    <None Remove="ClientApp\src\components\banners\Style.js" />
+    <None Remove="ClientApp\src\components\buttons\buttons.js" />
+    <None Remove="ClientApp\src\components\buttons\calendar-button\calendar-button.js" />
+    <None Remove="ClientApp\src\components\buttons\export-button\export-button-report-substances.js" />
+    <None Remove="ClientApp\src\components\buttons\export-button\export-button-report.js" />
+    <None Remove="ClientApp\src\components\buttons\export-button\export-button.js" />
+    <None Remove="ClientApp\src\components\buttons\share-button\share-button.js" />
+    <None Remove="ClientApp\src\components\buttons\styled.js" />
+    <None Remove="ClientApp\src\components\cards\BannerCard.js" />
+    <None Remove="ClientApp\src\components\cards\frame\cards-frame.js" />
+    <None Remove="ClientApp\src\components\cards\frame\style.js" />
+    <None Remove="ClientApp\src\components\cards\sampleCard\SampleCardFive.js" />
+    <None Remove="ClientApp\src\components\cards\sampleCard\SampleCardFour.js" />
+    <None Remove="ClientApp\src\components\cards\sampleCard\SampleCardOne.js" />
+    <None Remove="ClientApp\src\components\cards\sampleCard\SampleCardSeven.js" />
+    <None Remove="ClientApp\src\components\cards\sampleCard\SampleCardSix.js" />
+    <None Remove="ClientApp\src\components\cards\sampleCard\SampleCardThree.js" />
+    <None Remove="ClientApp\src\components\cards\sampleCard\SampleCardTwo.js" />
+    <None Remove="ClientApp\src\components\charts\chartjs.js" />
+    <None Remove="ClientApp\src\components\checkbox\checkbox.js" />
+    <None Remove="ClientApp\src\components\checkbox\style.js" />
+    <None Remove="ClientApp\src\components\common\HandleLoadingState.tsx" />
+    <None Remove="ClientApp\src\components\common\OrdinalNumber.tsx" />
+    <None Remove="ClientApp\src\components\customDatePicker\datePicker.tsx" />
+    <None Remove="ClientApp\src\components\datePicker\datePicker.js" />
+    <None Remove="ClientApp\src\components\datePicker\style.js" />
+    <None Remove="ClientApp\src\components\decimal-format\DecimalFormat.js" />
+    <None Remove="ClientApp\src\components\dropdown\dropdown-style.js" />
+    <None Remove="ClientApp\src\components\dropdown\dropdown.js" />
+    <None Remove="ClientApp\src\components\header-search\header-search-style.js" />
+    <None Remove="ClientApp\src\components\header-search\header-search.js" />
+    <None Remove="ClientApp\src\components\header\header.js" />
+    <None Remove="ClientApp\src\components\header\style.js" />
+    <None Remove="ClientApp\src\components\heading\heading.js" />
+    <None Remove="ClientApp\src\components\heading\style.js" />
+    <None Remove="ClientApp\src\components\layout\MenuItems.js" />
+    <None Remove="ClientApp\src\components\layout\style.js" />
+    <None Remove="ClientApp\src\components\layout\TopMenu.js" />
+    <None Remove="ClientApp\src\components\modals\antd-modals.js" />
+    <None Remove="ClientApp\src\components\modals\styled.js" />
+    <None Remove="ClientApp\src\components\note\Card.js" />
+    <None Remove="ClientApp\src\components\note\style.js" />
+    <None Remove="ClientApp\src\components\page-headers\page-headers.js" />
+    <None Remove="ClientApp\src\components\page-headers\style.js" />
+    <None Remove="ClientApp\src\components\popup\popup.js" />
+    <None Remove="ClientApp\src\components\popup\style.css" />
+    <None Remove="ClientApp\src\components\popup\style.js" />
+    <None Remove="ClientApp\src\components\steps\customSteps.js" />
+    <None Remove="ClientApp\src\components\steps\steps.js" />
+    <None Remove="ClientApp\src\components\steps\style.js" />
+    <None Remove="ClientApp\src\components\tags\requestStatusTag.tsx" />
+    <None Remove="ClientApp\src\components\tags\style.js" />
+    <None Remove="ClientApp\src\components\tags\tags.js" />
+    <None Remove="ClientApp\src\components\utilities\auth-info\auth-info-style.js" />
+    <None Remove="ClientApp\src\components\utilities\auth-info\info.js" />
+    <None Remove="ClientApp\src\components\utilities\auth-info\message.js" />
+    <None Remove="ClientApp\src\components\utilities\auth-info\message\message.js" />
+    <None Remove="ClientApp\src\components\utilities\auth-info\notification.js" />
+    <None Remove="ClientApp\src\components\utilities\auth-info\notification\notification.js" />
+    <None Remove="ClientApp\src\components\utilities\auth-info\settings.js" />
+    <None Remove="ClientApp\src\components\utilities\auth-info\support.js" />
+    <None Remove="ClientApp\src\components\utilities\icons.js" />
+    <None Remove="ClientApp\src\components\utilities\progressBar.js" />
+    <None Remove="ClientApp\src\components\utilities\protectedRoute.js" />
+    <None Remove="ClientApp\src\components\utilities\utilities.js" />
+    <None Remove="ClientApp\src\config\config.js" />
+    <None Remove="ClientApp\src\config\icon\icon.json" />
+    <None Remove="ClientApp\src\config\theme\themeVariables.js" />
+    <None Remove="ClientApp\src\constants\constants.ts" />
+    <None Remove="ClientApp\src\container\dashboard\index.js" />
+    <None Remove="ClientApp\src\container\dashboard\style.js" />
+    <None Remove="ClientApp\src\container\layouts\AppLayout.tsx" />
+    <None Remove="ClientApp\src\container\layouts\AuthLayout.tsx" />
+    <None Remove="ClientApp\src\container\styled.ts" />
+    <None Remove="ClientApp\src\contexts\CommonDataContext\CommonDataContext.js" />
+    <None Remove="ClientApp\src\contexts\CommonDataContext\CommonDataProvider.js" />
+    <None Remove="ClientApp\src\demoData\article.json" />
+    <None Remove="ClientApp\src\demoData\changelog.json" />
+    <None Remove="ClientApp\src\demoData\header-search.json" />
+    <None Remove="ClientApp\src\demoData\message-list.json" />
+    <None Remove="ClientApp\src\demoData\usersData.json" />
+    <None Remove="ClientApp\src\demoData\usersGroupData.json" />
+    <None Remove="ClientApp\src\enums\UserTypesEnum.ts" />
+    <None Remove="ClientApp\src\hooks\useAccessLevel.ts" />
+    <None Remove="ClientApp\src\hooks\useAuthorization.ts" />
+    <None Remove="ClientApp\src\hooks\useChartData.js" />
+    <None Remove="ClientApp\src\hooks\useCheckRouteAccess.ts" />
+    <None Remove="ClientApp\src\hooks\useDebouncedValue.ts" />
+    <None Remove="ClientApp\src\hooks\useDecodeJWT.ts" />
+    <None Remove="ClientApp\src\hooks\useGetRoles.js" />
+    <None Remove="ClientApp\src\hooks\useLocalStorage.ts" />
+    <None Remove="ClientApp\src\hooks\useOrganization.ts" />
+    <None Remove="ClientApp\src\hooks\useTableSorting.ts" />
+    <None Remove="ClientApp\src\i18n.js" />
+    <None Remove="ClientApp\src\index.tsx" />
+    <None Remove="ClientApp\src\pages\authentication\ForgotPassword.tsx" />
+    <None Remove="ClientApp\src\pages\authentication\ResetPasswordPage.tsx" />
+    <None Remove="ClientApp\src\pages\authentication\SetNewPasswordPage.tsx" />
+    <None Remove="ClientApp\src\pages\authentication\SignIn.tsx" />
+    <None Remove="ClientApp\src\pages\authentication\Signup.tsx" />
+    <None Remove="ClientApp\src\pages\authentication\style.ts" />
+    <None Remove="ClientApp\src\pages\authorization\not-found\not-found.tsx" />
+    <None Remove="ClientApp\src\pages\authorization\style.ts" />
+    <None Remove="ClientApp\src\pages\authorization\unAuthorized\unAuthorized.tsx" />
+    <None Remove="ClientApp\src\pages\branches\BranchesPage.tsx" />
+    <None Remove="ClientApp\src\pages\branches\components\CreateBranchesModal.tsx" />
+    <None Remove="ClientApp\src\pages\certified-technicians\CompanyTechniciansPage.tsx" />
+    <None Remove="ClientApp\src\pages\certified-technicians\components\CertifiedTechniciansTable.js" />
+    <None Remove="ClientApp\src\pages\certified-technicians\components\QualificationForm.js" />
+    <None Remove="ClientApp\src\pages\certified-technicians\components\SearchCompanyTechniciansModal.js" />
+    <None Remove="ClientApp\src\pages\certified-technicians\components\TechnicianProfile.js" />
+    <None Remove="ClientApp\src\pages\certified-technicians\components\TechnicianQualifications.js" />
+    <None Remove="ClientApp\src\pages\certified-technicians\components\TechniciansEmploymentHistory.js" />
+    <None Remove="ClientApp\src\pages\certified-technicians\CreateTechnicianPage.js" />
+    <None Remove="ClientApp\src\pages\certified-technicians\ListTechniciansPage.js" />
+    <None Remove="ClientApp\src\pages\certified-technicians\UpdateTechnicianPage.js" />
+    <None Remove="ClientApp\src\pages\certified-technicians\ViewTechnicianDetails.js" />
+    <None Remove="ClientApp\src\pages\codebooks\cantons\CantonsPage.tsx" />
+    <None Remove="ClientApp\src\pages\codebooks\CodebookCommonPage\CodebookCommonPage.tsx" />
+    <None Remove="ClientApp\src\pages\codebooks\CodebookCommonPage\CreateCommonCodebookModal.tsx" />
+    <None Remove="ClientApp\src\pages\codebooks\CodebookCommonPage\data.ts" />
+    <None Remove="ClientApp\src\pages\codebooks\CodebookCommonPage\types.ts" />
+    <None Remove="ClientApp\src\pages\codebooks\entities\EntitiesPage.tsx" />
+    <None Remove="ClientApp\src\pages\codebooks\municipalities\MunicipalitiesPage.tsx" />
+    <None Remove="ClientApp\src\pages\coming-soon\ComingSoon.tsx" />
+    <None Remove="ClientApp\src\pages\dashboard\Dashboard.tsx" />
+    <None Remove="ClientApp\src\pages\database-connections\DatabaseConnections.tsx" />
+    <None Remove="ClientApp\src\pages\database-connections\style.css" />
+    <None Remove="ClientApp\src\pages\equipments\components\CreateEquipmentActivity.js" />
+    <None Remove="ClientApp\src\pages\equipments\components\EquipmentActivities.js" />
+    <None Remove="ClientApp\src\pages\equipments\components\EquipmentForm.js" />
+    <None Remove="ClientApp\src\pages\equipments\CreateEquipmentPage.js" />
+    <None Remove="ClientApp\src\pages\equipments\ListEquipmentsPage.js" />
+    <None Remove="ClientApp\src\pages\equipments\UpdateEquipmentPage.js" />
+    <None Remove="ClientApp\src\pages\equipments\ViewEquipmentDetails.js" />
+    <None Remove="ClientApp\src\pages\home\HomePage.tsx" />
+    <None Remove="ClientApp\src\pages\institutions\components\CreateInstitutionModal.tsx" />
+    <None Remove="ClientApp\src\pages\institutions\components\InstitutionAdminFilters.tsx" />
+    <None Remove="ClientApp\src\pages\institutions\InstitutionsPage.tsx" />
+    <None Remove="ClientApp\src\pages\localization\email\EmailPage.js" />
+    <None Remove="ClientApp\src\pages\localization\system-languages\SystemLanguages.js" />
+    <None Remove="ClientApp\src\pages\localization\translations\Translations.js" />
+    <None Remove="ClientApp\src\pages\logs-audit\LogsPage.js" />
+    <None Remove="ClientApp\src\pages\newsfeed\components\ComposeMessageModal.js" />
+    <None Remove="ClientApp\src\pages\newsfeed\components\PostItem.js" />
+    <None Remove="ClientApp\src\pages\newsfeed\components\style.js" />
+    <None Remove="ClientApp\src\pages\newsfeed\NewsfeedPage.js" />
+    <None Remove="ClientApp\src\pages\newsfeed\utilities.js" />
+    <None Remove="ClientApp\src\pages\profile\EditProfile.js" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\AddDataOnImportExportSubstanceYear.js" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\AddQuantitiesOfRefrigerant.js" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\CreateQuantitiesOfRefrigerant.tsx" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\DataOnImportExportOfSubstances.tsx" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\DataOnPurchasedSection.tsx" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\EditDataOnImportExportSubstanceYear.js" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\EditQuantitiesOfRefrigerant.js" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\IMPORTERSList.tsx" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\MVTEOImportExportListPage.tsx" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\MVTEOListPage.tsx" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\PRILOGCreateByServiceTechnician.tsx" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\PRILOGCreateImportExportSubstances.tsx" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\ViewMVTEOAnnualReportByServiceTechnician.tsx" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\components\ViewMVTEOImportExportSubstances.tsx" />
+    <None Remove="ClientApp\src\pages\quantities-of-refrigerants\ViewMVTEO.tsx" />
+    <None Remove="ClientApp\src\pages\refrigerants\components\CreateRefrigerantModal.tsx" />
+    <None Remove="ClientApp\src\pages\refrigerants\RefrigerantsPage.tsx" />
+    <None Remove="ClientApp\src\pages\registers\ImporterExporters\ImporterExportersPage.tsx" />
+    <None Remove="ClientApp\src\pages\registers\MarkedEquipments\MarkedEquipmentsPage.tsx" />
+    <None Remove="ClientApp\src\pages\registers\OwnerOperators\OwnerOperatorsPage.tsx" />
+    <None Remove="ClientApp\src\pages\registers\RegisterDetailsPage.tsx" />
+    <None Remove="ClientApp\src\pages\registers\ServiceCompanies\ServiceCompaniesPage.tsx" />
+    <None Remove="ClientApp\src\pages\reports\AnnualReportByServiceTechnician.tsx" />
+    <None Remove="ClientApp\src\pages\reports\AnnualReportOnImportExportSubstances.tsx" />
+    <None Remove="ClientApp\src\pages\reports\CompaniesByEntity.tsx" />
+    <None Remove="ClientApp\src\pages\reports\EquipmentsByCoolingSystem.tsx" />
+    <None Remove="ClientApp\src\pages\reports\EquipmentsByMunicipality.tsx" />
+    <None Remove="ClientApp\src\pages\reports\EquipmentsByPurpose.tsx" />
+    <None Remove="ClientApp\src\pages\reports\MVTEOAnnualReportByServiceTechnician.tsx" />
+    <None Remove="ClientApp\src\pages\reports\MVTEOAnnualReportOnImportExportSubstances.tsx" />
+    <None Remove="ClientApp\src\pages\reports\QuantitiesOfRefrigerants.tsx" />
+    <None Remove="ClientApp\src\pages\reports\RefrigerantsByEntity.tsx" />
+    <None Remove="ClientApp\src\pages\reports\ServiceCompaniesReport.tsx" />
+    <None Remove="ClientApp\src\pages\reports\TechnicianByQualifications.tsx" />
+    <None Remove="ClientApp\src\pages\reports\TechniciansByEntity.tsx" />
+    <None Remove="ClientApp\src\pages\reports\TechniciansTrainingCenter.tsx" />
+    <None Remove="ClientApp\src\pages\requests\CreateInternalRequestPage.tsx" />
+    <None Remove="ClientApp\src\pages\requests\RequestDetailsPage.tsx" />
+    <None Remove="ClientApp\src\pages\requests\RequestsPage.tsx" />
+    <None Remove="ClientApp\src\pages\settings\EmploymentStatusBox.tsx" />
+    <None Remove="ClientApp\src\pages\settings\overview\Account.js" />
+    <None Remove="ClientApp\src\pages\settings\overview\CompanyInfoForm.tsx" />
+    <None Remove="ClientApp\src\pages\settings\overview\Notification.js" />
+    <None Remove="ClientApp\src\pages\settings\overview\ProfileAuthorBox.js" />
+    <None Remove="ClientApp\src\pages\settings\overview\SocialProfile.js" />
+    <None Remove="ClientApp\src\pages\settings\overview\style.js" />
+    <None Remove="ClientApp\src\pages\settings\Settings.js" />
+    <None Remove="ClientApp\src\pages\style.js" />
+    <None Remove="ClientApp\src\pages\user-groups\UserGroupCard.js" />
+    <None Remove="ClientApp\src\pages\user-groups\UserGroupPage.js" />
+    <None Remove="ClientApp\src\pages\users\CreateUserPage.js" />
+    <None Remove="ClientApp\src\pages\users\UpdateUserPage.js" />
+    <None Remove="ClientApp\src\pages\users\UsersPage.js" />
+    <None Remove="ClientApp\src\pages\users\UsersTable.js" />
+    <None Remove="ClientApp\src\pages\users\UserWizzard.js" />
+    <None Remove="ClientApp\src\pages\users\ViewUserDetails.js" />
+    <None Remove="ClientApp\src\redux\authentication\actionCreator.js" />
+    <None Remove="ClientApp\src\redux\authentication\actions.js" />
+    <None Remove="ClientApp\src\redux\authentication\reducers.js" />
+    <None Remove="ClientApp\src\redux\chartContent\actionCreator.js" />
+    <None Remove="ClientApp\src\redux\chartContent\actions.js" />
+    <None Remove="ClientApp\src\redux\headerSearch\actionCreator.js" />
+    <None Remove="ClientApp\src\redux\headerSearch\actions.js" />
+    <None Remove="ClientApp\src\redux\headerSearch\reducers.js" />
+    <None Remove="ClientApp\src\redux\message\actionCreator.js" />
+    <None Remove="ClientApp\src\redux\message\actions.js" />
+    <None Remove="ClientApp\src\redux\message\reducers.js" />
+    <None Remove="ClientApp\src\redux\notification\actionCreator.js" />
+    <None Remove="ClientApp\src\redux\notification\actions.js" />
+    <None Remove="ClientApp\src\redux\notification\reducers.js" />
+    <None Remove="ClientApp\src\redux\rootReducers.js" />
+    <None Remove="ClientApp\src\redux\store.js" />
+    <None Remove="ClientApp\src\redux\themeLayout\actionCreator.js" />
+    <None Remove="ClientApp\src\redux\themeLayout\actions.js" />
+    <None Remove="ClientApp\src\redux\themeLayout\reducers.js" />
+    <None Remove="ClientApp\src\redux\users\actionCreator.js" />
+    <None Remove="ClientApp\src\redux\users\actions.js" />
+    <None Remove="ClientApp\src\redux\users\reducers.js" />
+    <None Remove="ClientApp\src\reportWebVitals.js" />
+    <None Remove="ClientApp\src\router\AppRouter.tsx" />
+    <None Remove="ClientApp\src\router\Routes.tsx" />
+    <None Remove="ClientApp\src\service-worker.js" />
+    <None Remove="ClientApp\src\serviceWorkerRegistration.js" />
+    <None Remove="ClientApp\src\setupProxy.js" />
+    <None Remove="ClientApp\src\setupTests.js" />
+    <None Remove="ClientApp\src\static\css\style.css" />
+    <None Remove="ClientApp\src\static\img\auth\BG.png" />
+    <None Remove="ClientApp\src\static\img\auth\bottomShape.png" />
+    <None Remove="ClientApp\src\static\img\auth\signin.png" />
+    <None Remove="ClientApp\src\static\img\auth\signin.svg" />
+    <None Remove="ClientApp\src\static\img\auth\topShape.png" />
+    <None Remove="ClientApp\src\static\img\avatar\chat-auth.png" />
+    <None Remove="ClientApp\src\static\img\avatar\NoPath %282%29.png" />
+    <None Remove="ClientApp\src\static\img\avatar\NoPath %283%29.png" />
+    <None Remove="ClientApp\src\static\img\avatar\NoPath %284%29.png" />
+    <None Remove="ClientApp\src\static\img\avatar\NoPath.png" />
+    <None Remove="ClientApp\src\static\img\avatar\profileImage.png" />
+    <None Remove="ClientApp\src\static\img\avatar\t1.png" />
+    <None Remove="ClientApp\src\static\img\avatar\team-1.png" />
+    <None Remove="ClientApp\src\static\img\banner\1.png" />
+    <None Remove="ClientApp\src\static\img\banner\10.png" />
+    <None Remove="ClientApp\src\static\img\banner\11.png" />
+    <None Remove="ClientApp\src\static\img\banner\12.png" />
+    <None Remove="ClientApp\src\static\img\banner\13.png" />
+    <None Remove="ClientApp\src\static\img\banner\2.png" />
+    <None Remove="ClientApp\src\static\img\banner\3.png" />
+    <None Remove="ClientApp\src\static\img\banner\4.png" />
+    <None Remove="ClientApp\src\static\img\banner\5.png" />
+    <None Remove="ClientApp\src\static\img\banner\6.png" />
+    <None Remove="ClientApp\src\static\img\banner\8.png" />
+    <None Remove="ClientApp\src\static\img\banner\9.png" />
+    <None Remove="ClientApp\src\static\img\banner\badge.svg" />
+    <None Remove="ClientApp\src\static\img\banner\banner-1.png" />
+    <None Remove="ClientApp\src\static\img\banner\banner-2.png" />
+    <None Remove="ClientApp\src\static\img\banner\banner-3.png" />
+    <None Remove="ClientApp\src\static\img\banner\banner-4.png" />
+    <None Remove="ClientApp\src\static\img\banner\card-banner-1.png" />
+    <None Remove="ClientApp\src\static\img\banner\card-banner-2.png" />
+    <None Remove="ClientApp\src\static\img\banner\cta-banner-1.png" />
+    <None Remove="ClientApp\src\static\img\banner\cta-banner-2.png" />
+    <None Remove="ClientApp\src\static\img\barcode.png" />
+    <None Remove="ClientApp\src\static\img\cards-logo\american-express.png" />
+    <None Remove="ClientApp\src\static\img\cards-logo\ms.png" />
+    <None Remove="ClientApp\src\static\img\cards-logo\visa.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\g1.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\g2.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\g3.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\t1.jpg" />
+    <None Remove="ClientApp\src\static\img\chat-author\t10.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\t12.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\t2.jpg" />
+    <None Remove="ClientApp\src\static\img\chat-author\t3.jpg" />
+    <None Remove="ClientApp\src\static\img\chat-author\t4.jpg" />
+    <None Remove="ClientApp\src\static\img\chat-author\t5.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\t6.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\t7.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\t8.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\t9.png" />
+    <None Remove="ClientApp\src\static\img\chat-author\w.png" />
+    <None Remove="ClientApp\src\static\img\dark.png" />
+    <None Remove="ClientApp\src\static\img\email\1.png" />
+    <None Remove="ClientApp\src\static\img\email\2.png" />
+    <None Remove="ClientApp\src\static\img\email\3.png" />
+    <None Remove="ClientApp\src\static\img\email\4.png" />
+    <None Remove="ClientApp\src\static\img\files\jpg.png" />
+    <None Remove="ClientApp\src\static\img\files\pdf.png" />
+    <None Remove="ClientApp\src\static\img\files\png.png" />
+    <None Remove="ClientApp\src\static\img\files\psd.png" />
+    <None Remove="ClientApp\src\static\img\files\zip.png" />
+    <None Remove="ClientApp\src\static\img\flag\english.png" />
+    <None Remove="ClientApp\src\static\img\flag\germany.png" />
+    <None Remove="ClientApp\src\static\img\flag\spain.png" />
+    <None Remove="ClientApp\src\static\img\flag\turky.png" />
+    <None Remove="ClientApp\src\static\img\gallery\1.png" />
+    <None Remove="ClientApp\src\static\img\gallery\10.png" />
+    <None Remove="ClientApp\src\static\img\gallery\11.png" />
+    <None Remove="ClientApp\src\static\img\gallery\12.png" />
+    <None Remove="ClientApp\src\static\img\gallery\2.png" />
+    <None Remove="ClientApp\src\static\img\gallery\3.png" />
+    <None Remove="ClientApp\src\static\img\gallery\4.png" />
+    <None Remove="ClientApp\src\static\img\gallery\5.png" />
+    <None Remove="ClientApp\src\static\img\gallery\6.png" />
+    <None Remove="ClientApp\src\static\img\gallery\7.png" />
+    <None Remove="ClientApp\src\static\img\gallery\8.png" />
+    <None Remove="ClientApp\src\static\img\gallery\9.png" />
+    <None Remove="ClientApp\src\static\img\google.png" />
+    <None Remove="ClientApp\src\static\img\Group 1317.png" />
+    <None Remove="ClientApp\src\static\img\Group 9786.png" />
+    <None Remove="ClientApp\src\static\img\icon\007-microphone-1.png" />
+    <None Remove="ClientApp\src\static\img\icon\010-home.png" />
+    <None Remove="ClientApp\src\static\img\icon\013-document-1.png" />
+    <None Remove="ClientApp\src\static\img\icon\014-document.png" />
+    <None Remove="ClientApp\src\static\img\icon\015-color-palette.png" />
+    <None Remove="ClientApp\src\static\img\icon\017-video-camera.png" />
+    <None Remove="ClientApp\src\static\img\icon\024-like.svg" />
+    <None Remove="ClientApp\src\static\img\icon\1.svg" />
+    <None Remove="ClientApp\src\static\img\icon\155-credit-card.svg" />
+    <None Remove="ClientApp\src\static\img\icon\2.svg" />
+    <None Remove="ClientApp\src\static\img\icon\3.svg" />
+    <None Remove="ClientApp\src\static\img\icon\4.svg" />
+    <None Remove="ClientApp\src\static\img\icon\address.svg" />
+    <None Remove="ClientApp\src\static\img\icon\adobe.svg" />
+    <None Remove="ClientApp\src\static\img\icon\arrow-left.svg" />
+    <None Remove="ClientApp\src\static\img\icon\arrow-right.svg" />
+    <None Remove="ClientApp\src\static\img\icon\book.svg" />
+    <None Remove="ClientApp\src\static\img\icon\camera.svg" />
+    <None Remove="ClientApp\src\static\img\icon\chat.svg" />
+    <None Remove="ClientApp\src\static\img\icon\clipboard.svg" />
+    <None Remove="ClientApp\src\static\img\icon\cloud.svg" />
+    <None Remove="ClientApp\src\static\img\icon\columns.svg" />
+    <None Remove="ClientApp\src\static\img\icon\documentation.svg" />
+    <None Remove="ClientApp\src\static\img\icon\file.svg" />
+    <None Remove="ClientApp\src\static\img\icon\flat.svg" />
+    <None Remove="ClientApp\src\static\img\icon\headphone.svg" />
+    <None Remove="ClientApp\src\static\img\icon\iconfinder_trello_2317760.svg" />
+    <None Remove="ClientApp\src\static\img\icon\idea.svg" />
+    <None Remove="ClientApp\src\static\img\icon\image.png" />
+    <None Remove="ClientApp\src\static\img\icon\image.svg" />
+    <None Remove="ClientApp\src\static\img\icon\label.png" />
+    <None Remove="ClientApp\src\static\img\icon\layers.svg" />
+    <None Remove="ClientApp\src\static\img\icon\left.svg" />
+    <None Remove="ClientApp\src\static\img\icon\logo2.svg" />
+    <None Remove="ClientApp\src\static\img\icon\logo3.svg" />
+    <None Remove="ClientApp\src\static\img\icon\logo4.svg" />
+    <None Remove="ClientApp\src\static\img\icon\logo5.svg" />
+    <None Remove="ClientApp\src\static\img\icon\logo6.svg" />
+    <None Remove="ClientApp\src\static\img\icon\logoIn.svg" />
+    <None Remove="ClientApp\src\static\img\icon\New Customer.svg" />
+    <None Remove="ClientApp\src\static\img\icon\NotOpen.svg" />
+    <None Remove="ClientApp\src\static\img\icon\Opened.svg" />
+    <None Remove="ClientApp\src\static\img\icon\paint.svg" />
+    <None Remove="ClientApp\src\static\img\icon\Profit.svg" />
+    <None Remove="ClientApp\src\static\img\icon\protection.svg" />
+    <None Remove="ClientApp\src\static\img\icon\quote.png" />
+    <None Remove="ClientApp\src\static\img\icon\repeat.svg" />
+    <None Remove="ClientApp\src\static\img\icon\right.svg" />
+    <None Remove="ClientApp\src\static\img\icon\SalesRevenue.svg" />
+    <None Remove="ClientApp\src\static\img\icon\Sent.svg" />
+    <None Remove="ClientApp\src\static\img\icon\Slack.svg" />
+    <None Remove="ClientApp\src\static\img\icon\strategy.svg" />
+    <None Remove="ClientApp\src\static\img\icon\theme.svg" />
+    <None Remove="ClientApp\src\static\img\icon\user.svg" />
+    <None Remove="ClientApp\src\static\img\icon\water-fall.svg" />
+    <None Remove="ClientApp\src\static\img\knowledgebase\wp-research.png" />
+    <None Remove="ClientApp\src\static\img\light.png" />
+    <None Remove="ClientApp\src\static\img\logo.png" />
+    <None Remove="ClientApp\src\static\img\Logo_Dark.svg" />
+    <None Remove="ClientApp\src\static\img\Logo_white.png" />
+    <None Remove="ClientApp\src\static\img\ltr.png" />
+    <None Remove="ClientApp\src\static\img\map\mpc.png" />
+    <None Remove="ClientApp\src\static\img\ms.svg" />
+    <None Remove="ClientApp\src\static\img\pages\404.svg" />
+    <None Remove="ClientApp\src\static\img\pages\maintenance.svg" />
+    <None Remove="ClientApp\src\static\img\pages\support.svg" />
+    <None Remove="ClientApp\src\static\img\pages\undraw_cancel.svg" />
+    <None Remove="ClientApp\src\static\img\pages\undraw_warning.svg" />
+    <None Remove="ClientApp\src\static\img\PayPalLogo.png" />
+    <None Remove="ClientApp\src\static\img\products\1.png" />
+    <None Remove="ClientApp\src\static\img\products\10.png" />
+    <None Remove="ClientApp\src\static\img\products\11.png" />
+    <None Remove="ClientApp\src\static\img\products\12.png" />
+    <None Remove="ClientApp\src\static\img\products\2.png" />
+    <None Remove="ClientApp\src\static\img\products\3.png" />
+    <None Remove="ClientApp\src\static\img\products\4.png" />
+    <None Remove="ClientApp\src\static\img\products\5.png" />
+    <None Remove="ClientApp\src\static\img\products\6.png" />
+    <None Remove="ClientApp\src\static\img\products\7.png" />
+    <None Remove="ClientApp\src\static\img\products\8.png" />
+    <None Remove="ClientApp\src\static\img\products\9.png" />
+    <None Remove="ClientApp\src\static\img\products\electronics\1.png" />
+    <None Remove="ClientApp\src\static\img\products\electronics\2.png" />
+    <None Remove="ClientApp\src\static\img\products\electronics\3.png" />
+    <None Remove="ClientApp\src\static\img\products\electronics\4.png" />
+    <None Remove="ClientApp\src\static\img\products\electronics\5.png" />
+    <None Remove="ClientApp\src\static\img\profile.svg" />
+    <None Remove="ClientApp\src\static\img\profile\Cover image-image.jpg" />
+    <None Remove="ClientApp\src\static\img\profile\cover-img.png" />
+    <None Remove="ClientApp\src\static\img\profile\CoverImage.svg" />
+    <None Remove="ClientApp\src\static\img\profile\post\165.png" />
+    <None Remove="ClientApp\src\static\img\profile\post\506.png" />
+    <None Remove="ClientApp\src\static\img\profile\post\70.png" />
+    <None Remove="ClientApp\src\static\img\profile\post\907.png" />
+    <None Remove="ClientApp\src\static\img\profile\post\brightland_3744.png" />
+    <None Remove="ClientApp\src\static\img\profile\post\postImage.png" />
+    <None Remove="ClientApp\src\static\img\progress-active.svg" />
+    <None Remove="ClientApp\src\static\img\progress-success.svg" />
+    <None Remove="ClientApp\src\static\img\progress.svg" />
+    <None Remove="ClientApp\src\static\img\rtl.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\1.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\1.svg" />
+    <None Remove="ClientApp\src\static\img\sampleCards\10.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\11.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\12.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\13.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\2.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\2.svg" />
+    <None Remove="ClientApp\src\static\img\sampleCards\3.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\3.svg" />
+    <None Remove="ClientApp\src\static\img\sampleCards\4.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\4.svg" />
+    <None Remove="ClientApp\src\static\img\sampleCards\5.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\6.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\7.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\8.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\9.png" />
+    <None Remove="ClientApp\src\static\img\sampleCards\card-bg.png" />
+    <None Remove="ClientApp\src\static\img\sellers\1.png" />
+    <None Remove="ClientApp\src\static\img\sellers\2.png" />
+    <None Remove="ClientApp\src\static\img\sellers\3.png" />
+    <None Remove="ClientApp\src\static\img\sellers\4.png" />
+    <None Remove="ClientApp\src\static\img\sellers\5.png" />
+    <None Remove="ClientApp\src\static\img\sellers\6.png" />
+    <None Remove="ClientApp\src\static\img\sellers\7.png" />
+    <None Remove="ClientApp\src\static\img\sellers\8.png" />
+    <None Remove="ClientApp\src\static\img\sellers\9.png" />
+    <None Remove="ClientApp\src\static\img\side.png" />
+    <None Remove="ClientApp\src\static\img\small-logo.png" />
+    <None Remove="ClientApp\src\static\img\Subtraction1.png" />
+    <None Remove="ClientApp\src\static\img\support-img.png" />
+    <None Remove="ClientApp\src\static\img\top.png" />
+    <None Remove="ClientApp\src\static\img\users\1.png" />
+    <None Remove="ClientApp\src\static\img\users\10.png" />
+    <None Remove="ClientApp\src\static\img\users\11.png" />
+    <None Remove="ClientApp\src\static\img\users\12.png" />
+    <None Remove="ClientApp\src\static\img\users\13.png" />
+    <None Remove="ClientApp\src\static\img\users\14.jpg" />
+    <None Remove="ClientApp\src\static\img\users\2.png" />
+    <None Remove="ClientApp\src\static\img\users\3.png" />
+    <None Remove="ClientApp\src\static\img\users\4.png" />
+    <None Remove="ClientApp\src\static\img\users\5.png" />
+    <None Remove="ClientApp\src\static\img\users\6.png" />
+    <None Remove="ClientApp\src\static\img\users\7.png" />
+    <None Remove="ClientApp\src\static\img\users\8.png" />
+    <None Remove="ClientApp\src\static\img\users\9.jpg" />
+    <None Remove="ClientApp\src\static\img\users\cover\1.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\10.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\11.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\12.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\13.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\14.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\15.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\2.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\3.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\4.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\5.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\6.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\7.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\8.png" />
+    <None Remove="ClientApp\src\static\img\users\cover\9.png" />
+    <None Remove="ClientApp\src\static\img\wizards\1-1.svg" />
+    <None Remove="ClientApp\src\static\img\wizards\1.svg" />
+    <None Remove="ClientApp\src\static\img\wizards\2.svg" />
+    <None Remove="ClientApp\src\static\img\wizards\3.svg" />
+    <None Remove="ClientApp\src\static\img\wizards\4.svg" />
+    <None Remove="ClientApp\src\styles\custom.css" />
+    <None Remove="ClientApp\src\utility\accessibility\hasPermission.ts" />
+    <None Remove="ClientApp\src\utility\accessibility\index.ts" />
+    <None Remove="ClientApp\src\utility\accessibility\isMenuItemVisible.ts" />
+    <None Remove="ClientApp\src\utility\decode-jwt.js" />
+    <None Remove="ClientApp\src\utility\dowloadFiles.tsx" />
+    <None Remove="ClientApp\src\utility\get-query-param.js" />
+    <None Remove="ClientApp\src\utility\getClaims.ts" />
+    <None Remove="ClientApp\src\utility\handle401Error.ts" />
+    <None Remove="ClientApp\src\utility\isEmptyObject.js" />
+    <None Remove="ClientApp\src\utility\isSuperAdmin.ts" />
+    <None Remove="ClientApp\src\utility\loggedAsCompanyUser.ts" />
+    <None Remove="ClientApp\src\utility\notification.js" />
+    <None Remove="ClientApp\src\utility\showServerErrors.ts" />
+    <None Remove="ClientApp\src\utility\useOrganization.js" />
+    <None Remove="ClientApp\src\utility\utility.ts" />
+    <None Remove="ClientApp\tsconfig.json" />
+    <None Remove="ClientApp\yarn.lock" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DLP.Application\DLP.Application.csproj" />
+    <ProjectReference Include="..\DLP.Infrastructure\DLP.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\AccessDenied.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\ForgotPassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\ForgotPasswordConfirmation.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\Login.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\Logout.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\Manage\ChangePassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\Manage\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\Manage\SetPassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\Manage\_Layout.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\Manage\_ManageNav.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\Manage\_ViewImports.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\Register.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\RegisterConfirmation.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\ResetPassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\ResetPasswordConfirmation.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\Account\_ViewImports.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\_ViewImports.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Identity\Pages\_ViewStart.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Error.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Shared\_Layout.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Shared\_LoginPartial.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Shared\_ValidationScriptsPartial.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\_ViewImports.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\_ViewStart.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Templates\CarrierOfferInvite.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!--<ItemGroup>
+    <Folder Include="wwwroot\ProfileImages\" />
+  </ItemGroup>-->
+
+  <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
+    <!-- Ensure Node.js is installed -->
+    <Exec Command="node --version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+    </Exec>
+    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+    <Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm install --legacy-peer-deps" />
+  </Target>
+
+  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
+    <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm install --legacy-peer-deps" />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+
+    <!-- Include the newly-built files in the publish output -->
+    <ItemGroup>
+      <DistFiles Include="$(SpaRoot)build\**" />
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>wwwroot\%(RecursiveDir)%(FileName)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+</Project>

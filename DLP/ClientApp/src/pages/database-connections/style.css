@@ -1,0 +1,14 @@
+.connection-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+}
+
+.connection-card p {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    padding: 0;
+    margin-left: 10px;
+}

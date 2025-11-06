@@ -1,0 +1,47 @@
+@model DLP.Application.Common.Templates.Models.NotConfirmedUserModal;
+@using DLP.HtmlHelpers;
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>@await Html.Translate("email.title", "Your account is ready", Model.UserLang)</title>
+</head>
+<body>
+    <div style='max-width: 500px; margin: 0 auto; background-color: #f2f2f2; padding: 20px;'>
+        <h1 style='color: #333333; text-align: center;'>
+            <span>@await Html.Translate("email.header", "One-Time Password", Model.UserLang)</span>
+        </h1>
+        <p>
+            <span>@await Html.Translate("email.greeting", "Dear", Model.UserLang) @Model.RecipientName,</span>
+        </p>
+        <p>
+            <span>@await Html.Translate("email.intro", "U okviru obaveza definisanih pravnim propisima koji regulišu pitanja upravljanja supstancama koje oštećuju ozonski omotač i zamjenskim supstancama u oba entiteta i na nivou Savjeta ministara BiH, razvijena je DLP platforma kao tematski informacioni sistem za praćenje i upravljanje podacima o rashladnim uređajima i opremi.", Model.UserLang)</span>
+        </p>
+        <p>
+            @await Html.Translate("email.platform.features.header", "DLP platforma je alat razvijen za:", Model.UserLang)
+        </p>
+        <ul>
+            <li>@await Html.Translate("email.platform.feature1", "Registraciju pravnih lica i preduzetnika koji upravljaju DLP uređajima (rashladni, klimatizacioni uređaji i toplotne pumpe).", Model.UserLang)</li>
+            <li>@await Html.Translate("email.platform.feature2", "Verifikaciju opreme koja je prethodno prijavljena kroz inventarizaciju.", Model.UserLang)</li>
+            <li>@await Html.Translate("email.platform.feature3", "Evidenciju i praćenje podataka o supstancama koje oštećuju ozonski omotač i njihovim zamjenskim supstancama, kao i izvještavanje prema zakonskim zahtjevima.", Model.UserLang)</li>
+            <li>@await Html.Translate("email.platform.feature4", "Automatizaciju procesa prijave i kontrole, omogućavajući korisnicima jednostavniji unos podataka i pristup informacijama.", Model.UserLang)</li>
+        </ul>
+        <p>
+            <span>@await Html.Translate("email.platform.importance", "Ovaj sistem je ključan za ispunjenje obaveza koje proizilaze iz zakonskih okvira u BiH i međunarodnog Montrealskog protokola.", Model.UserLang)</span>
+        </p>
+        <p>
+            @await Html.Translate("email.registration.instruction", "Molimo Vas da pristupite DLP platformi putem linka:", Model.UserLang) <a href="@Model.SiteUrl">@Model.SiteUrl</a>, @await Html.Translate("email.registration.action", "te izvršite kreiranje korisničkog profila i registraciju kompanije, unoseći podatke o opremi koju posjedujete.", Model.UserLang)
+        </p>
+        <div style='background-color: #ffffff; border: 1px solid #cccccc; padding: 10px; font-size: 18px; text-align: center; margin: 20px 0;'>
+            @Model.OTPCode
+        </div>
+        <p>
+            @await Html.Translate("email.registration.notice", "Napominjemo da je proces registracije obavezan, te podržava nastavak Vašeg poslovanja u skladu sa važećim propisima.", Model.UserLang)
+        </p>
+        <p style='text-align: center; color: #888888; margin-top: 20px;'>
+            @await Html.Translate("email.closing", "S poštovanjem,", Model.UserLang)
+        </p>
+    </div>
+</body>
+</html>

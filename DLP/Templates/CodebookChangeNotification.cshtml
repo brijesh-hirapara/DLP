@@ -1,0 +1,48 @@
+﻿@model DLP.Application.Common.Templates.Models.CodebookChangeViewModel;
+@using DLP.HtmlHelpers;
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>
+        Codebook Status Notification
+    </title>
+</head>
+<body>
+    <div style='max-width: 500px; margin: 0 auto; background-color: #f2f2f2; padding: 20px;'>
+        <h1 style='color: #333333; text-align: center;'>
+            <span>@await Html.Translate("codebook-action:email.title", "Codebook Status Update", Model.UserLang)</span>
+        </h1>
+        <br />
+        <p>
+            <span>@await Html.Translate("codebook-action:entry.text", "Dear User,", Model.UserLang)</span>
+        </p>
+        <br />
+        <p>
+            <span>@await Html.Translate("codebook-action:email.header", "The Codebook named", Model.UserLang) "@Model.CodebookName"</span>
+            @if (Model.ActionType == DLP.Domain.Enums.CodebookActionEnum.ADD)
+            {
+                <span>@await Html.Translate("codebook-action:email-added", "has been added to the system", Model.UserLang)</span>
+            }
+            else if (Model.ActionType == DLP.Domain.Enums.CodebookActionEnum.UPDATE)
+            {
+                <span>@await Html.Translate("codebook-action:email-updated", "has been updated in the system", Model.UserLang)</span>
+            }
+            else if (Model.ActionType == DLP.Domain.Enums.CodebookActionEnum.DELETE)
+            {
+                <span>@await Html.Translate("codebook-action:email-deleted", "has been deleted from the system", Model.UserLang)</span>
+            }
+            <span>@await Html.Translate("codebook-action:by-user", "by the user with Username: ", Model.UserLang) @Model.Username</span>
+        </p>
+        <br />
+        <p>
+            <span>@await Html.Translate("codebook-action:action.details", "If you have any questions or concerns regarding this action, please contact the system administrator.", Model.UserLang)</span>
+        </p>
+        <br />
+        <p style='text-align: center; color: #888888; margin-top: 20px;'>
+            <span>@await Html.Translate("codebook-action:greetings", "Thank you", Model.UserLang)</span>
+        </p>
+    </div>
+</body>
+</html>

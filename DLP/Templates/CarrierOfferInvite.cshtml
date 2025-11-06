@@ -1,0 +1,68 @@
+﻿@model DLP.Application.Common.Templates.Models.CarrierOfferEmailViewModel
+@using DLP.HtmlHelpers;
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>@await Html.Translate("carrier-offer:email-title", "New Transport Request Available", Model.UserLang)</title>
+</head>
+<body>
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background-color: #f9f9f9; border-radius: 8px;">
+        <p>
+            @await Html.Translate("carrier-offer:greeting", "Dear", Model.UserLang) @Model.FullName,
+        </p>
+        <br />
+
+        <p>
+            @await Html.Translate("carrier-offer:intro",
+                     "A new transport request is available for your fleet that matches your service profile.", Model.UserLang)
+        </p>
+
+        <br />
+        <table style="width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 6px;">
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">@await Html.Translate("carrier-offer:request-id", "Request ID", Model.UserLang):</td>
+                <td style="padding: 8px;">@Model.RequestId</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">@await Html.Translate("carrier-offer:pickup", "Pickup Location", Model.UserLang):</td>
+                <td style="padding: 8px;">@Model.PickupCity</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">@await Html.Translate("carrier-offer:delivery", "Delivery Location", Model.UserLang):</td>
+                <td style="padding: 8px;">@Model.DeliveryCity</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">@await Html.Translate("carrier-offer:weight", "Total Weight (kg)", Model.UserLang):</td>
+                <td style="padding: 8px;">@Model.Weight.ToString("N0")</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">@await Html.Translate("carrier-offer:deadline", "Offer Submission Deadline", Model.UserLang):</td>
+                <td style="padding: 8px;">@Model.OfferDeadline.ToString("dd MMM yyyy HH:mm")</td>
+            </tr>
+        </table>
+
+        <br />
+        <p>
+            @await Html.Translate("carrier-offer:instruction",
+                     "Click the link below to view this request and submit your offer before the deadline.", Model.UserLang)
+        </p>
+
+        <p style="text-align: center; margin: 20px 0;">
+            <a href="@Model.Link"
+               style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                @await Html.Translate("carrier-offer:view-request", "View Transport Request", Model.UserLang)
+            </a>
+        </p>
+
+        <p>
+            @await Html.Translate("carrier-offer:thank", "Thank you for your continued partnership with TransiGo Logistics.", Model.UserLang)
+        </p>
+
+        <p>
+            @await Html.Translate("carrier-offer:regards", "Best Regards,", Model.UserLang)<br />
+            TransiGo Logistics Platform
+        </p>
+    </div>
+</body>
+</html>
