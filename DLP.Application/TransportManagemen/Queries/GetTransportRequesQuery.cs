@@ -94,6 +94,7 @@ namespace DLP.Application.TransportManagemen.Queries
                             .Where(r => !r.IsTemplate && !r.IsDeleted)
                             .AsQueryable();
 
+
                 if (!isAdmin)
                 {
                     transportRequests = transportRequests.Where(u => u.OrganizationId == _currentUserService.OrganizationId);
@@ -108,8 +109,27 @@ namespace DLP.Application.TransportManagemen.Queries
                 if (!string.IsNullOrEmpty(request.Search))
                 {
                     string search = request.Search.Replace(" ", "");
-                    transportRequests = transportRequests.Where(r => r.RequestId.Contains(search)
-                                        || r.TotalDistance.ToString().Contains(search));
+                    //transportRequests = transportRequests.Where(r => r.RequestId.Contains(search)
+                    //                    || r.TotalDistance.ToString().Contains(search));
+
+                    transportRequests = transportRequests.Where(r =>
+                     r.RequestId.Contains(search) ||
+                     r.TotalDistance.ToString().Contains(search) ||
+
+                     // ✅ Pickup Postal Code
+                     r.TransportPickup.Any(p => p.PostalCode.Contains(search)) ||
+
+                     // ✅ Pickup City
+                     r.TransportPickup.Any(p => p.City.Contains(search)) ||
+
+                     // ✅ Delivery Postal Code
+                     r.TransportDelivery.Any(d => d.PostalCode.Contains(search)) ||
+
+                     // ✅ Delivery City
+                     r.TransportDelivery.Any(d => d.City.Contains(search)) || 
+
+                     r.Organization.Name.Contains(search)
+                 );
                 }
 
 

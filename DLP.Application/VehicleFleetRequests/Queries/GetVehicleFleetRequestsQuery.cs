@@ -1,15 +1,19 @@
 ﻿using System.Linq.Expressions;
 using DLP.Application.ActivityLogs.Dto;
+using DLP.Application.Common.Extensions;
 using DLP.Application.Common.Interfaces;
 using DLP.Application.Common.Mappings;
 using DLP.Application.Common.Pagination;
 using DLP.Application.Common.Sorting;
+using DLP.Application.TransportManagemen.DTOs;
 using DLP.Application.VehicleFleetRequests.DTOs;
 using DLP.Domain.Entities;
 using DLP.Domain.Enums;
 using DocumentFormat.OpenXml.Drawing;
+using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using static DLP.Application.Common.Auth.CustomPolicies;
 
 namespace DLP.Application.VehicleFleetRequests.Queries
 {
@@ -71,166 +75,174 @@ namespace DLP.Application.VehicleFleetRequests.Queries
                 OrdinalPaginatedList<ListVehicleFleetRequestDto> responseData;
                 var isAdmin = _currentUserService.AccessLevel == AccessLevelType.SuperAdministrator;
                 var userId = _currentUserService.UserId;
-                var query =
-                            from vfr in _context.VehicleFleetRequests
-                            join user in _context.Users on vfr.CreatedById equals user.Id
-                            join org in _context.Organizations on user.OrganizationId equals org.Id
-                            join queGroup in _context.Questionnaire
-                                on EF.Functions.Collate(vfr.Id.ToString(), "utf8mb4_general_ci")
-                                   equals EF.Functions.Collate(queGroup.RequestId, "utf8mb4_general_ci") into queJoin
-                            from que in queJoin
-                                .Where(q => q.QuestionNo == 1)
-                                .Take(1)
-                                .DefaultIfEmpty()
-                            where !vfr.IsDeleted && (!request.IsCarrier || vfr.CreatedById == userId)
-                            select new
-                            {
-                                VehicleFleetRequest = vfr,
-                                OrganizationName = org.Name,
-                                Questionnaire = que
-                            };
 
+                var query = _context.VehicleFleetRequests
+                    .Include(vfr => vfr.Organization)
+                    .Where(x => !x.IsDeleted && (!request.IsCarrier || x.CreatedById == userId));
 
                 if (!string.IsNullOrWhiteSpace(request.Search))
                 {
-                    string search = request.Search.Trim();
+                    string search = request.Search.Trim().ToLower();
 
                     query = query.Where(r =>
-                        r.VehicleFleetRequest.Comments != null && r.VehicleFleetRequest.Comments.ToLower().Contains(search.ToLower()) ||
-                        r.OrganizationName != null && r.OrganizationName.ToLower().Contains(search.ToLower())
+                        (r.Comments != null && r.Comments.ToLower().Contains(search)) ||
+                        (r.Organization.Name != null &&
+                         r.Organization.Name.Contains(search))
                     );
                 }
 
                 if (!request.ListArchived)
                 {
-                    query = query.Where(r => r.VehicleFleetRequest.Status == (int)VehicleFleetRequestStatus.Confirmed);
+                    query = query.Where(r => r.Status == (int)VehicleFleetRequestStatus.Confirmed);
                 }
-                else
+                else if (request.Status > -1)
                 {
-                    if (request.Status > -1)
-                    {
-                        query = query.Where(r => r.VehicleFleetRequest.Status == request.Status);
-                    }
+                    query = query.Where(r => r.Status == request.Status);
                 }
-
 
                 if (!isAdmin)
                 {
-                    var employeeUserIds = _context.Organizations
+                    var employeeUserIds = await _context.Organizations
                         .Where(o => o.Id == _currentUserService.OrganizationId)
-                        .SelectMany(o => o.Employees.Select(e => e.Id)) // Assuming Employee has a UserId property
-                        .ToList();
+                        .SelectMany(o => o.Employees.Select(e => e.Id))
+                        .ToListAsync();
 
-                    query = query.Where(r => employeeUserIds.Contains(r.VehicleFleetRequest.CreatedById));
-
+                    query = query.Where(r => employeeUserIds.Contains(r.CreatedById));
                 }
-                var projectedQuery = query
-            .Select(x => new ListVehicleFleetRequestDto
-            {
-                Id = x.VehicleFleetRequest.Id,
-                OrdinalNumber = 0,
-                Name = x.OrganizationName,             // ✅ Organization name here
-                CreatedAt = x.VehicleFleetRequest.CreatedAt,
-                UpdatedAt = x.VehicleFleetRequest.UpdatedAt ?? x.VehicleFleetRequest.CreatedAt,
-                ActionedAt = x.VehicleFleetRequest.ActionedAt,
-                Status = (VehicleFleetRequestStatus)x.VehicleFleetRequest.Status,
-                StatusText = ((VehicleFleetRequestStatus)x.VehicleFleetRequest.Status).ToString(),
-                Comments = x.VehicleFleetRequest.Comments,
-                TotalVehicle = x.Questionnaire != null ? (int?)x.Questionnaire.Values ?? 0 : 0
-            });
 
+                // Pre-fetch total vehicles to avoid N+1 queries
+                Dictionary<string, int> vehicleCounts = new();
 
+                if (!request.ListArchived)
+                {
+                    vehicleCounts = await _context.Questionnaire
+                        .Where(q => q.QuestionNo == 1)
+                        .GroupBy(q => q.RequestId)
+                        .Select(g => new
+                        {
+                            RequestId = g.Key,
+                            Total = g.Select(x => (int?)x.Values).FirstOrDefault() ?? 0
+                        })
+                        .ToDictionaryAsync(x => x.RequestId, x => x.Total, cancellationToken);
+                }
 
+                // Materialize first
+                var projectedList = await query
+                    .Select(x => new ListVehicleFleetRequestDto
+                    {
+                        Id = x.Id,
+                        OrdinalNumber = 0,
+                        Name = x.Organization.Name,
+                        CreatedAt = x.CreatedAt,
+                        UpdatedAt = x.UpdatedAt ?? x.CreatedAt,
+                        ActionedAt = x.ActionedAt,
+                        Status = (VehicleFleetRequestStatus)x.Status,
+                        StatusText = ((VehicleFleetRequestStatus)x.Status).ToString(),
+                        Comments = x.Comments,
+                        TotalVehicle = !request.ListArchived
+                            ? (vehicleCounts.ContainsKey(x.Id.ToString()) ? vehicleCounts[x.Id.ToString()] : 0)
+                            : 0
+                    })
+                    .ToListAsync(cancellationToken);
 
-                // Manual sorting
+                // ✅ Sorting (works in memory, including TotalVehicle)
                 if (request.Sorting != null && !string.IsNullOrEmpty(request.Sorting.PropertyName))
                 {
-                    bool ascending = request.Sorting.IsDescending;
+                    bool ascending = !request.Sorting.IsDescending;
                     switch (request.Sorting.PropertyName.ToLower())
                     {
                         case "name":
-                            projectedQuery = ascending
-                                ? projectedQuery.OrderBy(x => x.Name)
-                                : projectedQuery.OrderByDescending(x => x.Name);
+                            projectedList = ascending
+                                ? projectedList.OrderBy(x => x.Name).ToList()
+                                : projectedList.OrderByDescending(x => x.Name).ToList();
                             break;
-
                         case "createdat":
-                            projectedQuery = ascending
-                                ? projectedQuery.OrderBy(x => x.CreatedAt)
-                                : projectedQuery.OrderByDescending(x => x.CreatedAt);
+                            projectedList = ascending
+                                ? projectedList.OrderBy(x => x.CreatedAt).ToList()
+                                : projectedList.OrderByDescending(x => x.CreatedAt).ToList();
                             break;
-
                         case "status":
-                            projectedQuery = ascending
-                                ? projectedQuery.OrderBy(x => x.Status)
-                                : projectedQuery.OrderByDescending(x => x.Status);
+                            projectedList = ascending
+                                ? projectedList.OrderBy(x => x.Status).ToList()
+                                : projectedList.OrderByDescending(x => x.Status).ToList();
                             break;
-
                         case "updatedat":
-                            projectedQuery = ascending
-                                ? projectedQuery.OrderBy(x => x.UpdatedAt)
-                                : projectedQuery.OrderByDescending(x => x.UpdatedAt);
+                            projectedList = ascending
+                                ? projectedList.OrderBy(x => x.UpdatedAt).ToList()
+                                : projectedList.OrderByDescending(x => x.UpdatedAt).ToList();
                             break;
-
                         case "actionedat":
-                            projectedQuery = ascending
-                                ? projectedQuery.OrderBy(x => x.ActionedAt)
-                                : projectedQuery.OrderByDescending(x => x.ActionedAt);
+                            projectedList = ascending
+                                ? projectedList.OrderBy(x => x.ActionedAt).ToList()
+                                : projectedList.OrderByDescending(x => x.ActionedAt).ToList();
                             break;
-
                         case "totalvehicle":
-                            projectedQuery = ascending
-                                ? projectedQuery.OrderBy(x => x.TotalVehicle)
-                                : projectedQuery.OrderByDescending(x => x.TotalVehicle);
+                            projectedList = ascending
+                                ? projectedList.OrderBy(x => x.TotalVehicle).ToList()
+                                : projectedList.OrderByDescending(x => x.TotalVehicle).ToList();
                             break;
                         case "comments":
-                            projectedQuery = ascending
-                                ? projectedQuery.OrderBy(x => x.Comments)
-                                : projectedQuery.OrderByDescending(x => x.Comments);
+                            projectedList = ascending
+                                ? projectedList.OrderBy(x => x.Comments).ToList()
+                                : projectedList.OrderByDescending(x => x.Comments).ToList();
                             break;
                         default:
-                            // Default sorting
-                            projectedQuery = projectedQuery.OrderByDescending(x => x.CreatedAt);
+                            projectedList = projectedList.OrderByDescending(x => x.CreatedAt).ToList();
                             break;
-
                     }
                 }
                 else
                 {
-                    // Default sorting
-                    projectedQuery = projectedQuery.OrderByDescending(x => x.CreatedAt);
+                    projectedList = projectedList.OrderByDescending(x => x.CreatedAt).ToList();
                 }
 
+                // Add sequential numbering after sorting
+                for (int i = 0; i < projectedList.Count; i++)
+                {
+                    projectedList[i].OrdinalNumber = i + 1;
+                }
 
+                // ✅ Export or Paginated response
                 if (request.IsFromExport)
                 {
-                    var response = projectedQuery
-                    .ToList();
-                    responseData = new OrdinalPaginatedList<ListVehicleFleetRequestDto>(response, response.Count, request.PageNumber, request.PageSize);
+                    var response = projectedList.ToList();
+                    responseData = new OrdinalPaginatedList<ListVehicleFleetRequestDto>(
+                        response,
+                        response.Count,
+                        request.PageNumber,
+                        request.PageSize
+                    );
                 }
                 else
                 {
-                    responseData = await projectedQuery
-                  .OrdinalPaginatedListAsync(request.PageNumber, request.PageSize);
+                    var paginatedData = projectedList
+                        .Skip((request.PageNumber - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToList();
+
+                    responseData = new OrdinalPaginatedList<ListVehicleFleetRequestDto>(
+                        paginatedData,
+                        projectedList.Count,
+                        request.PageNumber,
+                        request.PageSize
+                    );
                 }
 
-
-
-
+                // Activity log
                 await _activityLogger.Add(new ActivityLogDto
                 {
                     UserId = _currentUserService.UserId,
                     LogTypeId = (int)LogTypeEnum.INFO,
-                    Activity = "Successfully retrieved a list of vehicle fleet requests",
+                    Activity = "Successfully retrieved a list of vehicle fleet requests"
                 });
+
                 return responseData;
+
             }
             catch (Exception ex)
             {
                 throw;
             }
-
         }
-
     }
 }

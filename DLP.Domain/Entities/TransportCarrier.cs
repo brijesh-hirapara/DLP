@@ -19,6 +19,7 @@ namespace DLP.Domain.Entities
         public bool IsExpired { get; set; }
         public bool IsScheduleDiffers { get; set; }
         public bool IsShipperBook { get; set; }
+        public DateTime? ShipperBookAt { get; set; }
         public TransportCarrierStatus Status { get; set; }
         public TransportCarrierInvitationStatus InvitationStatus { get; set; }
         public Guid? TruckTypeId { get; set; }

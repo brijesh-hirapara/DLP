@@ -34,8 +34,19 @@ namespace DLP.Application.TransportManagemen.Queries
         private static readonly IReadOnlyDictionary<string, Expression<Func<TransportRequest, object?>>> OrderingPropertyMappings =
             new Dictionary<string, Expression<Func<TransportRequest, object?>>>(StringComparer)
             {
+            { "requestId", x => x.RequestId },
             { "createdAt", x => x.CreatedAt },
             { "status", x => x.Status },
+            { "possiblePickup", x => x.TransportPickup
+            .OrderBy(p => p.PostalCode)
+            .Select(p => p.PostalCode)
+            .FirstOrDefault()
+            },
+            { "requestedDelivery", x => x.TransportDelivery
+            .OrderBy(p => p.PostalCode)
+            .Select(p => p.PostalCode)
+            .FirstOrDefault()
+            },
             };
 
         private static readonly OrderByFunction<TransportRequest> DefaultOrdering = new(x => x.CreatedAt, true);
@@ -77,8 +88,7 @@ namespace DLP.Application.TransportManagemen.Queries
             {
                 var query = _context.TransportCarriers
                                     .Where(x => x.OrganizationId == _currentUserService.OrganizationId
-                                         && !x.IsDeleted
-                                         && !x.IsAdminApproved);
+                                         && !x.IsDeleted);
 
                 if (!request.ListArchived)
                 {
@@ -101,10 +111,20 @@ namespace DLP.Application.TransportManagemen.Queries
                                         .AsQueryable();
 
 
-                if (request.Status.HasValue && request.Status > 0)
+                //if (request.Status.HasValue && request.Status > 0)
+                //{
+                //    transportRequests = transportRequests.Where(r => r.TransportCarrier.Any(tc => tc.Status == request.Status));
+                //}
+
+                if (request.Status.HasValue && Enum.IsDefined(typeof(TransportCarrierStatus), request.Status.Value))
                 {
-                    transportRequests = transportRequests.Where(r => r.TransportCarrier.Any(tc => tc.Status == request.Status));
+                    var orgId = _currentUserService.OrganizationId;
+
+                    transportRequests = transportRequests
+                        .Where(r => r.TransportCarrier
+                            .Any(tc => tc.OrganizationId == orgId && tc.Status == request.Status));
                 }
+
 
                 if (!string.IsNullOrEmpty(request.Search))
                 {
@@ -173,6 +193,13 @@ namespace DLP.Application.TransportManagemen.Queries
                     .ProjectToType<TransportRequestDto>()
                     .ToList();
                     responseData = new OrdinalPaginatedList<TransportRequestDto>(response, response.Count, request.PageNumber, request.PageSize);
+                    // force filter at DTO level
+                    responseData.Items.ForEach(x =>
+                    {
+                        x.TransportCarrier = x.TransportCarrier
+                            .Where(tc => tc.OrganizationId == _currentUserService.OrganizationId)
+                            .ToList();
+                    });
                 }
                 else
                 {

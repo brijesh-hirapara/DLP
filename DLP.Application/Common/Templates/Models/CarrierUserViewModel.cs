@@ -32,3 +32,13 @@ public class CarrierOfferResultEmailViewModel
     public string EvaluationResult { get; set; } = string.Empty; // "Accepted" or "Rejected"
 }
 
+
+public class ShipperShipmentEmailViewModel
+{
+    public string Email { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string UserLang { get; set; } = string.Empty;
+    public string RequestId { get; set; } = string.Empty;
+    public string EvaluationResult { get; set; } = string.Empty; // "Accepted" or "Rejected"
+}
+

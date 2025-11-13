@@ -25,6 +25,7 @@ interface CreateInstitutionModalProps {
   institutionToEdit?: OrganizationDto | null;
   onHide: () => void;
   onSubmitSuccess: () => void;
+  getInvitedUsers: () => void;
 }
 
 const organizationApi = new OrganizationsApi();
@@ -35,12 +36,14 @@ export const InviteCarriersModal = ({
   onHide,
   // onSubmitSuccess,
   transportRequestId,
+  getInvitedUsers
 }: {
   id?: string;
   isVisible: boolean;
   onHide: () => void;
   // onSubmitSuccess: () => void;
   transportRequestId: any;
+  getInvitedUsers:() => void
 }) => {
   const [form] = Form.useForm();
   const { t } = useTranslation();
@@ -61,7 +64,7 @@ export const InviteCarriersModal = ({
         try {
           const query = { type: 2 };
           const sorting = {}; // add sorting params if needed
-          const response = await organizationApi.apiOrganizationsGet({ ...query, ...sorting });
+          const response = await organizationApi.apiInviteCarrierGet({ ...query, ...sorting });
           setOrganizations(response.data.items ?? []);
         } catch (err) {
           // handle error as desired
@@ -74,13 +77,8 @@ export const InviteCarriersModal = ({
 
   
 const handleSubmit = async (values: any) => {
-  console.log("TransportRequestId debug", transportRequestId);
   try {
     setLoading(true);
-    console.log("Submitting payload", {
-  transportRequestId,
-  organizationIds: values.inviteCarriers,
-});
     await requestsApi.apiTransportManagementInviteCarriersPost({
       trasportRequestId: transportRequestId, 
       organizationIds: values.inviteCarriers,
@@ -90,6 +88,8 @@ const handleSubmit = async (values: any) => {
       t("institutions.success.add", "Invitation sent successfully!")
     );
     form.resetFields();
+    getInvitedUsers();
+    onHide();
     // onSubmitSuccess();
   } catch (err) {
     showServerErrors(err);

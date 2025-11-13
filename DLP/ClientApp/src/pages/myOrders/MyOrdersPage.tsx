@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Row, Col, Pagination, Button, Tooltip } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Row, Col, Pagination, Button, Tooltip, Popconfirm } from 'antd';
 import { useTranslation } from "react-i18next";
 import { PageHeader } from '../../components/page-headers/page-headers';
 import { AutoComplete } from '../../components/autoComplete/autoComplete';
@@ -11,36 +11,49 @@ import { StaticShipments } from './DummyOrders';
 import FeatherIcon from 'feather-icons-react';
 import { Link } from 'react-router-dom';
 import ViewOrderDetails from './ViewOrderDetails';
+import { RequestsApi } from 'api/api';
+import { ListTransportManagementDtoPaginatedList } from 'api/models/list-transport-management-dto-paginated-list';
+import { ShipmentsStatus } from 'api/models';
+import { useTableSorting } from 'hooks/useTableSorting';
+import { ListShipmentsDtoPaginatedList } from 'api/models/list-shipments-dto-paginated-list';
+import openNotificationWithIcon from 'utility/notification';
+
+const requestsApi = new RequestsApi;
+
+type PODFile = {
+  id: string;
+  contentType: string;
+  fileContents: string;
+  fileName: string;
+};
+
+type DocumentListProps = {
+  files: PODFile[];
+};
 
 
-// const statusColors: Record<string, string> = {
-//   "PICKUP CONFIRMED": " #EEF7FF",
-//   "TRUCK ASSIGNED": " #EEF7FF",
-//   "POD CONFIRMED": " #ECFBF6",
-//   "DRIVER BOOKED": " #EEF7FF",
-//   "DELIVERY CONFIRMED": " #EEF7FF",
-// };
-
-// const statusBorderColors: Record<string, string> = {
-//   "PICKUP CONFIRMED": " #9DA4F7",
-//   "TRUCK ASSIGNED": " #9DA4F7",    
-//   "POD CONFIRMED": " #31846A",      
-//   "DRIVER BOOKED": " #9DA4F7",
-//   "DELIVERY CONFIRMED": " #9DA4F7",
-// };
 
 const MyOrdersPage = () => {
   const { t } = useTranslation();
 
+    const [orders, setOrders] = useState<ListShipmentsDtoPaginatedList | null>(null);
+  const [loading, setLoading] = useState(true);
+const orderItems = orders?.items || [];
+    const { onSorterChange, sorting } = useTableSorting();
   
   const filterKeys = [
-    { id: "ALL", name: t("global.all", "All") },
-    { id: "ACTIVE", name: t("shipments.active", "Active") },
-    { id: "Completed", name: t("shipments.completed", "Completed") },
+    { id: ShipmentsStatus.ALL, name: t("global.all", "All") },
+    { id: ShipmentsStatus.ACTIVE, name: t("shipments.active", "Active") },
+    { id: ShipmentsStatus.COMPLETED, name: t("shipments.completed", "Completed") },
   ];
   
-  const [request, setRequest] = useState({
-    filterType: filterKeys,
+    const [request, setRequest] = useState<{
+    status : any;   
+    search: string;
+    pageNumber: number;
+    pageSize: number;
+  }>({
+    status: ShipmentsStatus.ALL,  
     search: "",
     pageNumber: 1,
     pageSize: 10,
@@ -54,17 +67,35 @@ const onSearchChange = (value: string) => {
 };
  const backgroundColors: Record<string, string> = {
   "POD CONFIRMED": " #ECFBF6",  
+  "POD NOT CONFIRMED": " #FFF5F5",
   "DEFAULT": " #EEF7FF"         
 };
 
 const borderColors: Record<string, string> = {
-  "POD CONFIRMED": "  #31846A",  
+  "POD CONFIRMED": "  #31846A",
+  "POD NOT CONFIRMED": " #FF4D4F",  
   "DEFAULT":  " #9DA4F7"         
 };
 
 const [modalVisible, setModalVisible] = useState(false);
 const [selectedOrder, setSelectedOrder] = useState(null);
-const [activeSection, setActiveSection] = useState("view");
+const [activeSection, setActiveSection] = useState<"view" | "assignTruck" | "uploadPod">("view");
+
+useEffect(() => {
+  fetchMyOrders();
+}, [request]);
+
+const fetchMyOrders = async () => {
+  try {
+    setLoading(true);
+    const res = await requestsApi.apiCarrierOrdersListGet({...request});
+    setOrders(res.data);
+  } catch (err) {
+    // setOrders([]);
+  }
+  setLoading(false);
+};
+
 
 // Handler to show modal and pass order data
 const handleViewOrder = (order: any) => {
@@ -76,6 +107,83 @@ const handleViewOrder = (order: any) => {
 const handleCloseModal = () => {
   setModalVisible(false);
   setSelectedOrder(null);
+};
+
+// Handler function inside MyOrdersPage component
+const handleActionClick = (order: any, buttonType: string) => {
+  setSelectedOrder(order);
+  if (buttonType === "Assign Truck") {
+    setActiveSection("assignTruck");
+  } else if (buttonType === "Upload POD") {
+    setActiveSection("uploadPod");
+  } else {
+    // setActiveSection("view");
+  }
+  setModalVisible(true);
+};
+
+
+const confirmPickup = async (shipmentId: string) => {
+  try {
+    await requestsApi.apiShipmentsIdConfirmPickupDeliveryPut({ shipmentId }); 
+    openNotificationWithIcon("success", t("my-oders.pickup-success", "Pickup confirmed successfull"));
+    fetchMyOrders(); 
+  } catch (error) {
+    openNotificationWithIcon("error", t("my-oders.pickup-error", "Pickup confirmation failed"));
+  }
+};
+
+const confirmDelivery = async (shipmentId: string) => {
+  try {
+    await requestsApi.apiShipmentsIdConfirmPickupDeliveryPut({ shipmentId }); 
+            openNotificationWithIcon(
+              "success",
+              t("my-oders.delivery-success", "Delivery confirmed successfully")
+            );
+    fetchMyOrders();
+  } catch (error) {
+    openNotificationWithIcon("error", t("my-oders.delivery-error", "Delivery confirmation failed"));
+  }
+};
+
+
+
+const PodDocumentsDownload: React.FC<DocumentListProps> = ({ files }) => {
+
+  // Helper to convert base64 to Blob URL for download
+  const base64ToBlobUrl = (base64Data: string, contentType: string) => {
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length).fill(0).map((_, i) => byteCharacters.charCodeAt(i));
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: contentType });
+    return URL.createObjectURL(blob);
+  };
+
+  return (
+    <>
+      {files.length > 0 ? (
+        files.map((doc) => {
+          const downloadUrl = base64ToBlobUrl(doc.fileContents, doc.contentType);
+          return (
+            <div className="doc-line" key={doc.id}>
+              {doc.fileName}
+              <a
+                href={downloadUrl}
+                download={doc.fileName}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ marginLeft: 8 }}
+              >
+                <FeatherIcon size={16} icon="download" />
+              </a>
+            </div>
+          );
+        })
+      ) : (
+        <div className="doc-line">{t("shipments.no-documents", "No documents available")}</div>
+      )}
+    </>
+  );
 };
 
 
@@ -94,20 +202,6 @@ const handleCloseModal = () => {
         />
       </CardToolbox>
 
-      {/* <Main>
-        <UsercardWrapper>
-          <Row gutter={25}>
-            {StaticShipments.map((offer) => (
-              <Col key={offer.id} xxl={8} md={12} sm={24} xs={24}>
-                <div
-                  className="shipment-card"
-                      style={{
-                                background: bgColor,
-                                border: `1.5px solid ${borderColor}`,
-                                borderRadius: "8px"
-                            }}
-                > */}
-
       <Main>
          <Row gutter={25}>
                   <Col xs={24}>
@@ -116,11 +210,11 @@ const handleCloseModal = () => {
                         <div className="project-sort-nav">
                           <nav>
                             <ul>
-                              {[...new Set(filterKeys)].map((item) => (
+                              {filterKeys.map((item) => (
                                 <li
                                   key={item.id}
                                   className={
-                                    request?.filterType === filterKeys
+                                    request?.status === item.id 
                                       ? "active"
                                       : "completed"
                                   }
@@ -130,7 +224,7 @@ const handleCloseModal = () => {
                                     onClick={() =>
                                       setRequest({
                                         ...request,
-                                        filterType: filterKeys,
+                                        status: item.id,
                                         pageNumber: 1,
                                         pageSize: 10,
                                       })
@@ -148,23 +242,73 @@ const handleCloseModal = () => {
                             onSearch={(value) => onSearchChange(value)}
                             patterns
                             placeholder={t(
-                  "global.auto-complete-placeholder",
-                  "Search..."
-                )}
+                              "global.auto-complete-placeholder",
+                              "Search..."
+                            )}
                           />
                         </div>
                       </div>
                     </ProjectSorting>
                   </Col>
                 </Row>
+                
         
         <UsercardWrapper>
           <Row gutter={25}>
-            {StaticShipments.map((offer) => {
-              const bgColor =
-                backgroundColors[offer.status] || backgroundColors["DEFAULT"];
-              const borderColor =
-                borderColors[offer.status] || borderColors["DEFAULT"];
+            {orderItems.map((offer) => {
+                  const shipmentCarrierStatus =
+                    offer.isPODConfirmed
+                      ? "POD CONFIRMED"
+                      : offer.isPODUploaded
+                        ? "POD NOT CONFIRMED"
+                        : offer.shipmentCarrierStatusDesc || "";
+
+                  const bgColor = backgroundColors[shipmentCarrierStatus] || backgroundColors["DEFAULT"];
+                  const borderColor = borderColors[shipmentCarrierStatus] || borderColors["DEFAULT"];
+
+              // Helper function to format date/time
+            const formatDateTime = (dateStr: string) => {
+              if (!dateStr) return "-";
+              const d = new Date(dateStr);
+              // For example: "05.07.2025, 14:00"
+              return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+            };
+
+            const formatLocation = (loc?: any) => {
+              if (!loc) return "";
+              return `${loc.city || ""}, ${loc.postalCode || ""}, ${loc.countryName || ""}`;
+            };
+
+
+            // Render first pickup/delivery (can map to list all if needed)
+            const pickupLoc = offer.transportPickup?.[0];
+            const deliveryLoc = offer.transportDelivery?.[0];
+            const carrier = offer.transportCarrier?.[0];
+
+            const pickupDetail =
+              pickupLoc && carrier
+                ? `${formatDateTime(carrier.estimatedPickupDateTimeFrom || "")} - ${formatDateTime(carrier.estimatedPickupDateTimeTo || "")}, ${formatLocation(pickupLoc)}`
+                : formatLocation(pickupLoc);
+
+            const deliveryDetail =
+              deliveryLoc && carrier
+                ? `${formatDateTime(carrier.estimatedDeliveryDateTimeFrom || "")} - ${formatDateTime(carrier.estimatedDeliveryDateTimeTo || "")}, ${formatLocation(deliveryLoc)}`
+                : formatLocation(deliveryLoc);
+
+                  // Sample "button"
+            const mainButton =
+              offer.shipmentCarrierStatusDesc === "Offer Booked"
+                ? "Assign Truck"
+                : !offer.isTruckAssigned
+                ? "Assign Truck"
+                : !offer.isPickupConfirmed
+                ? "Confirm Pickup"
+                : !offer.isDeliveryConfirmed
+                ? "Confirm Drop-Off"
+                : !offer.isPODUploaded
+                ? "Upload POD"
+                : "";
+
 
               return (
                 <Col key={offer.id} xxl={8} md={12} sm={24} xs={24}>
@@ -179,7 +323,36 @@ const handleCloseModal = () => {
                     <div className="card-header-row">
                       <div className="header-left">
                         <span className="request-id">
-                          {t("shipments.request-id", "Request ID")} {offer.id}
+                          {t("shipments.request-id", "Request ID")} {offer.requestId}
+                           {/* <Tooltip title={t("global.view", "View")}>
+                            <span
+                              style={{ 
+                                cursor: "pointer", 
+                                marginLeft: "6px", 
+                              // display: "inline-block" 
+                              }}
+                              onClick={() => handleViewOrder(offer)}
+                            >
+                              <FeatherIcon icon="eye" size={16} />
+                            </span>
+                          </Tooltip> */}
+                          <Tooltip title={t("global.view", "View")}>
+                            <Link to={`/my-orders/view/${offer.id}`}>
+                              <span
+                                style={{
+                                  cursor: "pointer",
+                                  marginLeft: "6px",
+                                  display: "inline-block"
+                                }}
+                              >
+                                <FeatherIcon icon="eye" size={16} />
+                              </span>
+                            </Link>
+                          </Tooltip>
+                          <div className="request-subtext" style={{ fontSize: "12px", color: "#888" }}>
+                            {offer.totalDistance} km | {offer.transportGoods?.[0]?.weight || "-"} KG
+                          </div>
+
                           {/* <Tooltip title={t("global.view", "View")}>
                             <Button
                               className="btn-icon"
@@ -189,28 +362,9 @@ const handleCloseModal = () => {
                               <FeatherIcon icon="eye" size={16} />
                             </Button>
                           </Tooltip>  */}
-{/* <Tooltip title={t("global.view", "View")}>
-  <span
-    style={{ cursor: "pointer", marginLeft: "10px", display: "inline-block" }}
-    onClick={() => handleViewOrder(offer)}
-  >
-    <FeatherIcon icon="eye" size={16} />
-  </span>
-</Tooltip> */}
+
 
                         </span>
-
-                        {/* <div className="header-fields">
-                          <span className="shipment-label">
-                            {t("shipments.shipper", "Shipper :")}
-                          </span>
-                          <span className="shipment-main">{offer.shipper}</span>
-                          <br />
-                          <span className="shipment-label">
-                            {t("shipments.carrier", "Carrier :")}
-                          </span>
-                          <span className="shipment-main">{offer.carrier}</span>
-                        </div> */}
                       </div>
                       <div className="card-price-block">
                         <span className="card-booked-price">
@@ -218,10 +372,10 @@ const handleCloseModal = () => {
                         </span>
                         <div className="card-price-pill">
                           <span className="card-price-value">
-                            {offer.price}
+                            {offer.transportCarrier?.[0]?.adminApprovedPrice || "-"}
                           </span>
                           <span className="card-price-curr">
-                            {offer.currency}
+                            {offer.currencyName || "EUR"}
                           </span>
                         </div>
                       </div>
@@ -231,41 +385,77 @@ const handleCloseModal = () => {
                       <div className="detail-label">
                         {t("shipments.pickup-details", "Pickup Details :")}
                       </div>
-                      <div className="detail-main">{offer.pickup}</div>
+                      <div className="detail-main">{pickupDetail}</div>
                       <div className="detail-label">
                         {t("shipments.delivery-details", "Delivery Details :")}
                       </div>
-                      <div className="detail-main">{offer.delivery}</div>
+                      <div className="detail-main">{deliveryDetail}</div>
                     </div>
                     <div className="card-divider" />
-                    <div className="card-bottom-row">
+                    <div className="card-bottom-row" style={{ display: 'flex', justifyContent:"flex-end", alignItems: 'center', gap: 8 }}>
+                      {["POD CONFIRMED", "POD NOT CONFIRMED"].includes(shipmentCarrierStatus) && (
                       <div className="documents-block">
-                        <div className="doc-title">
-                          {t("shipments.documents", "Documents")}
-                        </div>
-                        <div className="doc-line">
-                          Document 01: Title 01{" "}
-                          <span className="download-icon">
-                            <FeatherIcon size={16} icon="download" />
-                          </span>
-                        </div>
-                        <div className="doc-line">
-                          Document 02: Title 02{" "}
-                          <span className="download-icon">
-                            <FeatherIcon size={16} icon="download" />
-                          </span>
-                        </div>
+                        <div className="doc-title">{t("shipments.documents", "Documents")}</div>
+                        <PodDocumentsDownload files={offer.uploadPODFiles as PODFile[]} />
                       </div>
+                    )}
+
+
+
                       <div className="status-actions-block">
                         <div className="status-row">
                           <span className="current-status-label">
                             {t("shipments.current-status", "Current Status")}
                           </span>
-                          <span className="current-status">{offer.status}</span>
-                        </div>
-                        <Button className="confirm-btn" type="primary">
-                          {offer.button}
+                        
+                         <span className="current-status"
+                            style={{
+                              background: shipmentCarrierStatus === "POD NOT CONFIRMED" ? '#FFCCCC' : undefined,
+                              color: shipmentCarrierStatus === "POD NOT CONFIRMED" ? '#C00' : undefined,
+                              borderRadius: 4
+                            }}
+                          >{shipmentCarrierStatus}
+                        </span>
+                          </div>
+                      {/* {mainButton && (
+                        <Button 
+                        className="confirm-btn" 
+                        type="primary" 
+                        onClick={() => handleActionClick(offer, mainButton)}
+                        >
+                          {mainButton}
                         </Button>
+                       )}  */}
+                       {mainButton === "Confirm Pickup" ? (
+                        <Popconfirm
+                        className="confirm-btn"
+                          title={t("shippers:alert-toggle-confirm-pickup", "Are you sure you want to Confirm Pickup?")}
+                          onConfirm={() => offer.id && confirmPickup(offer.id)}
+                          okText="Yes"
+                          cancelText="No"
+                        >
+                          <Button type="primary">{mainButton}</Button>
+                        </Popconfirm>
+                      ) : mainButton === "Confirm Drop-Off" ? (
+                        <Popconfirm
+                        className="confirm-btn"
+                          title={t("shippers:alert-toggle-confirm-delivery", "Are you sure you want to Confirm Delivery?")}
+                          onConfirm={() => offer.id && confirmDelivery(offer.id)}
+                          okText="Yes"
+                          cancelText="No"
+                        >
+                          <Button className="confirm-btn"  type="primary">{mainButton}</Button>
+                        </Popconfirm>
+                      ) : (
+                        <Button
+                          className="confirm-btn"
+                          type="primary"
+                          onClick={() => handleActionClick(offer, mainButton)}
+                        >
+                          {mainButton}
+                        </Button>
+                      )}
+
                       </div>
                     </div>
                   </div>
@@ -289,11 +479,12 @@ const handleCloseModal = () => {
           </Row>
         </UsercardWrapper>
         <ViewOrderDetails
-  visible={modalVisible}
-  onCancel={handleCloseModal}
-  user={selectedOrder}
-  activeSection="view" 
-/>
+          visible={modalVisible}
+          onCancel={handleCloseModal}
+          user={selectedOrder}
+          activeSection={activeSection}
+          refreshOrders={fetchMyOrders}
+        />
 
       </Main>
     </>

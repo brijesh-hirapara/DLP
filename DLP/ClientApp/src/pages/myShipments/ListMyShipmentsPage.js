@@ -10,8 +10,10 @@ import MyShipmentsTable from "./MyShipmentsTable";
 import { useTableSorting } from "hooks/useTableSorting";
 import { UserFilterType } from "api/models";
 import { ExportButtonPageApiHeader } from "components/buttons/export-button/export-button-api";
-import { dummyShipments } from "./dummyShipments";
 import { ProjectHeader, ProjectSorting } from "../localization/email/style";
+import { RequestsApi } from "api/api";
+
+const requestsApi = new RequestsApi();
 
 function ListMyShipmentsPage() {
   const { t } = useTranslation();
@@ -20,37 +22,53 @@ function ListMyShipmentsPage() {
     { id: UserFilterType.ALL, name: t("shipments:select.all", "All") },
     { id: UserFilterType.ACTIVE, name: t("shipments:select.active", "Active") },
     {
-      id: UserFilterType.DISABLED,
+      id: UserFilterType.PENDING,
       name: t("shipments:select.completed", "Completed"),
     },
   ];
 
   const [isLoading, setIsLoading] = useState(false);
   const { sorting, onSorterChange } = useTableSorting();
-  const [shipment, setShipment] = useState({
-    filterType: UserFilterType.ALL,
+  const [query, setQuery] = useState({
+    status: UserFilterType.ALL,
     search: "",
     pageNumber: 1,
     pageSize: 10,
   });
 
-const [shipments, setShipments] = useState([]);
+  const [shipments, setShipments] = useState([]);
 
-useEffect(() => {
-  setShipments(dummyShipments);
-}, [shipment, sorting]);
+  useEffect(() => {
+    // setShipments(dummyShipments);
+    fetchShipments();
+  }, [query, sorting]);
+
+
+  const fetchShipments = async () => {
+    try {
+
+      setIsLoading(true);
+      const response = await requestsApi.apiShipmentsListGet({ ...query, ...sorting });
+      console.log(response.data, "response.data");
+      setShipments(response.data);
+    } catch (err) {
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
 
   const onSearchChange = (value) => {
-    setShipment({ ...shipment, search: value });
+    setQuery({ ...query, search: value });
   };
 
   const onPaginationChange = (pageNumber) => {
-    setShipment((prevQuery) => ({ ...prevQuery, pageNumber }));
+    setQuery((prevQuery) => ({ ...prevQuery, pageNumber }));
   };
 
   const onShowSizeChange = (pageNumber, pageSize) => {
-    setShipment((prevQuery) => ({ ...prevQuery, pageNumber, pageSize }));
+    setQuery((prevQuery) => ({ ...prevQuery, pageNumber, pageSize }));
   };
 
   return (
@@ -63,11 +81,11 @@ useEffect(() => {
           buttons={[
             <ExportButtonPageApiHeader
               key="1"
-              callFrom={"my-shipments"}
+              callFrom={"ShipperShipments"}
               filterType={0}
               municipalityId={""}
               entityId={""}
-              search={shipment.search}
+              search={query.search}
               typeOfEquipmentId={""}
               from={""}
               to={""}
@@ -77,56 +95,56 @@ useEffect(() => {
       </ProjectHeader>
 
       <Main>
-          <Row gutter={25}>
-            <Col xs={24}>
-              <ProjectSorting>
-                <div className="project-sort-bar">
-                  <div className="project-sort-nav">
-                    <nav>
-                      <ul>
-                        {[...new Set(filterKeys)].map((item) => (
-                          <li
-                            key={item.id}
-                            className={shipment?.filterType === item.id ? 'active' : 'deactivate'}
+        <Row gutter={25}>
+          <Col xs={24}>
+            <ProjectSorting>
+              <div className="project-sort-bar">
+                <div className="project-sort-nav">
+                  <nav>
+                    <ul>
+                      {[...new Set(filterKeys)].map((item) => (
+                        <li
+                          key={item.id}
+                          className={query?.status === item.id ? 'active' : 'deactivate'}
+                        >
+                          <Link
+                            to="#"
+                            onClick={() =>
+                              setQuery({
+                                ...query,
+                                status: item.id,
+                                pageNumber: 1,
+                                pageSize: 10,
+                              })
+                            }
                           >
-                            <Link
-                              to="#"
-                              onClick={() =>
-                                setShipment({
-                                  ...shipment,
-                                  filterType: item.id,
-                                  pageNumber: 1,
-                                  pageSize: 10,
-                                })
-                              }
-                            >
-                              {item.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </nav>
-                  </div>
-
-                  <div className="project-sort-search">
-                    <AutoComplete
-                      onSearch={(value) => onSearchChange(value)}
-                      placeholder={t(
-                  "my-shipments.search-placeholder",
-                  "Search Shipments"
-                )}
-                      patterns
-                    />
-                  </div>
+                            {item.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
                 </div>
-              </ProjectSorting>
-            </Col>
-          </Row>
 
-          <Row gutter={25}>
-           <Col xs={24}>
-            <Cards headless bodyStyle={{ padding: 0 }}>            
-              <MyShipmentsTable 
+                <div className="project-sort-search">
+                  <AutoComplete
+                    onSearch={(value) => onSearchChange(value)}
+                    placeholder={t(
+                      "my-shipments.search-placeholder",
+                      "Search Shipments"
+                    )}
+                    patterns
+                  />
+                </div>
+              </div>
+            </ProjectSorting>
+          </Col>
+        </Row>
+
+        <Row gutter={25}>
+          <Col xs={24}>
+            <Cards headless bodyStyle={{ padding: 0 }}>
+              <MyShipmentsTable
                 data={shipments}
                 isLoading={isLoading}
                 onPaginationChange={onPaginationChange}

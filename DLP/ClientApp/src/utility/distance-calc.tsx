@@ -9,8 +9,8 @@ export const getDistanceInKm = async (
     pickup: Address,
     delivery: Address
   ): Promise<string | null> => {
-    const apiKey = "V5SsQgPJtXM0EDwTWjWWAV7sHUpHCKJs0iWGYv5I3Z26CiRhe4tai1rCDuZ0QKBy"; // 🔹 replace with your distancematrix.ai key
-  
+    // const apiKey = "V5SsQgPJtXM0EDwTWjWWAV7sHUpHCKJs0iWGYv5I3Z26CiRhe4tai1rCDuZ0QKBy"; // 🔹 replace with your distancematrix.ai key
+    const apiKey = process.env.REACT_APP_LOCATION_API_URL as string; // 🔹 replace with your distancematrix.ai key
     const origins = `${pickup.companyAddress}, ${pickup.city}, ${pickup.postalCode || ""}, ${pickup.countryId || ""}`;
     const destinations = `${delivery.companyAddress}, ${delivery.city}, ${delivery.postalCode || ""}, ${delivery.countryId || ""}`;
   

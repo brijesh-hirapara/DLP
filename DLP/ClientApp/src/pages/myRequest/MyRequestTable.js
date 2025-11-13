@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import openNotificationWithIcon from "utility/notification";
 import moment from "moment";
 import { CountdownTimer } from "utility/CountdownTimer/CountdownTimer";
+import { hasPermission } from "utility/accessibility/hasPermission";
 
 const usersApi = new UsersApi();
 
@@ -64,7 +65,6 @@ const MyRequestTable = ({
   refetch
 }) => {
   const requestsTableData = [];
-  console.log(data, "data");
 
   const { t } = useTranslation();
  
@@ -77,7 +77,7 @@ const MyRequestTable = ({
       sortDirections: sortDirections,
     },
     {
-      title: t("requests:table.title.possible-pickup", "Posible Pick-Up"),
+      title: t("requests:table.title.possible-pickup", "Possible Pick-Up"),
       dataIndex: "posiblePickup",
       key: "posiblePickup",
       sorter: true,
@@ -101,8 +101,8 @@ const MyRequestTable = ({
       title: t("requests:table.title.goods", "Goods"),
       dataIndex: "goods",
       key: "goods",
-      sorter: true,
-      sortDirections: sortDirections,
+      sorter: false,
+      // sortDirections: sortDirections,
     },
     {
       title: t("requests:table.title.status", "Status"),
@@ -115,15 +115,15 @@ const MyRequestTable = ({
       title: t("requests:table.title.lowest-price", "Lowest Price"),
       dataIndex: "lowestPrice",
       key: "lowestPrice",
-      sorter: true,
-      sortDirections: sortDirections,
+      sorter: false,
+      // sortDirections: sortDirections,
     },
     {
       title: t("requests:table.title.offers", "Offers"),
       dataIndex: "offers",
       key: "offers",
-      sorter: true,
-      sortDirections: sortDirections,
+      sorter: false,
+      // sortDirections: sortDirections,
     },
     {
       title: t("requests:table.title.actions", "Actions"),
@@ -140,11 +140,7 @@ const MyRequestTable = ({
       await refetch();
       openNotificationWithIcon(
         "success",
-        t("users:notification.delete.title.success", "Success"),
-        t(
-          "users:notification.delete.description.success",
-          "This is description about delete successfuly alert"
-        )
+        t("request:success-canceled", "Request cancelled successfully!"),
       );
     } catch (error) {}
   };
@@ -155,6 +151,9 @@ const MyRequestTable = ({
     const pickup = item.transportPickup?.[0] || {};
     const delivery = item.transportDelivery?.[0] || {};
     const deliveryInfo = pickupInfo; 
+
+    const pickupCountryCode = pickup.countryName?.match(/\(([^)]+)\)/)?.[1] || pickup.countryName || "XX";
+    const deliveryCountryCode = delivery.countryName?.match(/\(([^)]+)\)/)?.[1] || delivery.countryName || "XX";
     
   const estimatedPickup =
     pickupInfo.pickupDateFrom && pickupInfo.pickupDateTo
@@ -162,8 +161,8 @@ const MyRequestTable = ({
         (pickupInfo.pickupTimeFrom || pickupInfo.pickupTimeTo
           ? `${moment(pickupInfo.pickupTimeFrom).format("HH:mm") || ''} - ${moment(pickupInfo.pickupTimeTo).format("HH:mm") || ''}\n`
           : '') +
-        `${pickup.city || ''}, ${pickup.postalCode || ''}, ${pickup.countryName || ''}`
-      : "N/A";
+        `${pickup.city || ''}, ${pickup.postalCode || ''}, ${pickupCountryCode || ''}`
+        : `${pickup.city || ''}, ${pickup.postalCode || ''}, ${pickupCountryCode || ''}`;
   
   const estimatedDelivery =
     pickupInfo.deliveryDateFrom && pickupInfo.deliveryDateTo
@@ -171,8 +170,9 @@ const MyRequestTable = ({
         (pickupInfo.deliveryTimeFrom || pickupInfo.deliveryTimeTo
           ? `${moment(pickupInfo.deliveryTimeFrom).format("HH:mm") || ''} - ${moment(pickupInfo.deliveryTimeTo).format("HH:mm") || ''}\n`
           : '') +
-        `${delivery.city || ''}, ${delivery.postalCode || ''}, ${delivery.countryName || ''}`
-      : "N/A";
+        `${delivery.city || ''}, ${delivery.postalCode || ''}, ${deliveryCountryCode || ''}`
+      :  `${delivery.city || ''}, ${delivery.postalCode || ''}, ${deliveryCountryCode || ''}`;
+      
   const length = (goods.length || 0);
   const width = (goods.width || 0);
   const height = (goods.height || 0);
@@ -206,6 +206,7 @@ const MyRequestTable = ({
       actions: (
         <div className="table-actions" style={{ display: "flex", alignItems: "center", gap: "10px", whiteSpace: "nowrap", paddingBottom: "4px 0" }}>
           {/* 👁 View */}
+          {hasPermission("my-requests:view-details") &&(
           <Tooltip title={t("global.view", "View")}>
               <Button className="btn-icon" type="info" shape="circle">
                 <Link to={`/my-requests/${item.id}`}>
@@ -213,32 +214,33 @@ const MyRequestTable = ({
                 </Link>
               </Button>
           </Tooltip>
+          )}
 
           {/* 🗑 Delete */}
           <Popconfirm
             title={t(
-              "requests:alert.delete-confirm",
-              "This step is irreversible, are you sure you want to delete {{dynamicValue}}?",
+              "my-request.cancel-request-confirmation",
+              "Are you sure you want to cancel request?",
               { dynamicValue: item.ordinalNumber }
             )}
             onConfirm={() => onDeleteConfirm(item.id)}
             okText="Yes"
             cancelText="No"
           >
-            {item.statusDesc !== "Canceled" && item.status !== "Completed" && (
+            {hasPermission("my-requests:delete") && (item.statusDesc === "Active" || item.statusDesc === "UnderEvaluation") && (
               <Tooltip title={t("global.delete", "Delete")}>
                 <Button className="btn-icon" type="danger" shape="circle">
-                  <FeatherIcon icon="trash-2" size={18} />
+                  <FeatherIcon icon="x-circle" size={18} />
                 </Button>
               </Tooltip>
             )}
           </Popconfirm>
 
-          {item.statusDesc === "UnderEvaluation" && (
-            <Tooltip title={t("global.choose-offer", "Choose Offer")}>
+          {hasPermission("choose-offer:list") &&  (item.statusDesc === "UnderEvaluation" && item.offerCount > 0) && (
+            <Tooltip title={t("global.review-offer", "Review")}>
               <Link to={`/my-requests/${item.id}/choose-offer`} style={{ fontSize: 12, textDecoration: 'underline', color: '#5f63f2' }}
               >
-                {t("choose-offer.title", "Choose Offer")}
+                {t("review-offer.title", "Review")}
               </Link>
             </Tooltip>
           )}

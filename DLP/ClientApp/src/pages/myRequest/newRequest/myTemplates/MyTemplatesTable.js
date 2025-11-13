@@ -140,8 +140,8 @@ const MyTemplatesTable = ({
           {hasPermission("my-templates:delete") && (
           <Popconfirm
             title={t(
-              "requests:alert.delete-confirm",
-              "This step is irreversible, are you sure you want to delete {{dynamicValue}}?",
+              "codebook-countries.delete-confirmation",
+              "Are you sure you want to delete?",
               { dynamicValue: ordinalNumber }
             )}
             onConfirm={() => onDeleteConfirm(id)}

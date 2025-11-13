@@ -23,6 +23,12 @@ public static class PredefinedUserGroups
     /// When users view registers and reports they will be able to see data only for their institution.
     /// </summary>    
     [PredefinedUserGroup] public static readonly string COMP_DLP_CARRIER = "Carrier";
+    [PredefinedUserGroup]
+    public static readonly string KN_ADMINISTRATOR = "KN Administrator";
+    [PredefinedUserGroup]
+    public static readonly string KN_USER = "KN User";
+
+
 
     public static bool IsPredefined(string role)
     {

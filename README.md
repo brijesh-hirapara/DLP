@@ -1,8 +1,8 @@
-# KGH - Database Management System for Cooling Systems and Devices
+# DLP - Database Management System for Cooling Systems and Devices
 
 ## Overview
 
-KGH is a robust and scalable database management system specifically designed for cooling systems and devices. It provides a comprehensive solution for organizing and managing data related to cooling systems, enabling users to monitor and control their devices efficiently.
+DLP is a robust and scalable database management system specifically designed for cooling systems and devices. It provides a comprehensive solution for organizing and managing data related to cooling systems, enabling users to monitor and control their devices efficiently.
 
 ## Features
 
@@ -16,12 +16,12 @@ KGH is a robust and scalable database management system specifically designed fo
 
 ## Technologies and Architecture
 
-KGH utilizes the following technologies and follows a specific architecture:
+DLP utilizes the following technologies and follows a specific architecture:
 
 - **CQRS (Command Query Responsibility Segregation)**: The project adopts the CQRS pattern, which segregates the read and write operations. This approach enhances performance, scalability, and maintainability by decoupling the components responsible for handling commands (writes) and queries (reads).
 
 - **Folder Structure**:
-  - **KGH(WebUI)**: This folder contains the web user interface of the application, developed using the ReactJS framework. It provides a highly interactive and responsive interface for users to interact with the database management system.
+  - **DLP(WebUI)**: This folder contains the web user interface of the application, developed using the ReactJS framework. It provides a highly interactive and responsive interface for users to interact with the database management system.
   - **Application**: The application layer resides in this folder and encompasses the business logic and coordination of data flow between the user interface and the domain layer.
   - **Domain**: The domain layer, located in this folder, encapsulates the core business entities, services, and logic. It defines the fundamental concepts and rules related to cooling systems and devices.
   - **Infrastructure**: The infrastructure layer, found in this folder, handles the integration with external systems and services. It includes components for data access, API integrations, and other infrastructure-related code.
@@ -32,13 +32,13 @@ KGH utilizes the following technologies and follows a specific architecture:
 
 ## Installation
 
-To install and run the KGH project locally, follow these steps:
+To install and run the DLP project locally, follow these steps:
 
 1. Clone the project repository from [GitHub Repository URL].
 2. Install the necessary dependencies for the backend by navigating to the project root directory and running the appropriate package manager command. For example, if using npm:
 
 ```shell
-cd KGH
+cd DLP
 dotnet restore
 ```
 
@@ -52,10 +52,10 @@ dotnet run
 
 5. Install the necessary dependencies for the web user interface by navigating to the `
 
-KGH(WebUI)` directory and running the package manager command. For example, if using npm:
+DLP(WebUI)` directory and running the package manager command. For example, if using npm:
 
 ```shell
-cd KGH/WebUI
+cd DLP/WebUI
 npm install
 ```
 

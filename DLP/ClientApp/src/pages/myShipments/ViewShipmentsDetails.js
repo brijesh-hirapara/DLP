@@ -339,12 +339,18 @@ const ViewShipmentsDetails = () => {
                                 </CardKeyValue>
                                 <CardKeyValue>
                                     <span>{t("common:download-files", "Download Files")}</span>
-                                    {/* <p>{requestData.companyName}</p> */}
-                                    <Button type="primary" style={{marginBottom:10, width: 'fit-content',}}>
-                                       <span style={{color:'white', paddingTop:3}}>{t('global.confirm-pod', "CONFIRM POD")}</span>
-                                    </Button>                    
+                                    {  (
+                                      <a
+                                        // href={shipmentDetails.podFileUrl}
+                                        download
+                                        className="flex items-center text-primary hover:underline ml-2"
+                                      >
+                                        {/* <Download className="w-4 h-4 mr-1" /> */}
+                                        {t("common:click-to-download", "Click to Download POD")}
+                                      </a>  
+                                    )}                 
                                 </CardKeyValue>
-                                <CardKeyValue>
+                                <CardKeyValue style={{marginTop:15}}>
                                     <span>{t("my-shipments:details.pod", "Proof of Delivery (POD) Uploaded:")}</span>
                                     {/* <p>{requestData?.receiveNews ? "Yes" : "No"}</p> */} <p>Fri, 19.08.2025, 18:17</p>
                                 </CardKeyValue>

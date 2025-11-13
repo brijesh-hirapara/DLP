@@ -102,3 +102,11 @@ public class OrganizationDto : IMapFrom<Organization>, IOrdinalNumber
         public bool IsActive { get; set; }
     }
 }
+
+
+public class OrganizationCarrierDto : IMapFrom<Organization>, IOrdinalNumber
+{
+    public Guid Id { get; set; }
+    public int OrdinalNumber { get; set; }
+    public string? Name { get; set; }
+}

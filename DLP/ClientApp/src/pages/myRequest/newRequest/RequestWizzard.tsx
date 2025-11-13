@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { Row, Col, Form, Input, Select, Radio, Checkbox, PageHeader, RadioChangeEvent, DatePicker, TimePicker, Spin } from 'antd';
+import { Row, Col, Form, Input, Select, Radio, Checkbox, PageHeader, RadioChangeEvent, DatePicker, TimePicker, Spin, message, InputNumber } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BasicFormWrapper } from '../../../container/styled';
 import Heading from 'components/heading/heading';
@@ -41,21 +41,46 @@ interface WizardStep {
 
 const { Option } = Select;
 
-const DimensionInput = styled(Input)`
-height: 48px;
+const DimensionInput = styled(InputNumber)`
+// height: 48px;
 
+// input {
+//   text-align: center;
+// }
+
+// &::placeholder {
+//   white-space: pre-line;   
+//   text-align: center;     
+//   line-height: 1.2;    
+//   position: relative;
+//   top: 40%;
+//   transform: translateY(-50%); 
+//   display: block;
+// }
+width: 100%;
+height: 48px;
+text-align: center;
+
+/* Center numeric text */
 input {
   text-align: center;
+  height: 48px;
+  line-height: 1.2;
 }
 
-&::placeholder {
-  white-space: pre-line;   
-  text-align: center;     
-  line-height: 1.2;    
-  position: relative;
-  top: 40%;
-  transform: translateY(-50%); 
+/* Multi-line placeholder styling */
+input::placeholder {
+  white-space: pre-line;
+  text-align: center;
+  line-height: 1.2;
   display: block;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(0, 0, 0, 0.25); /* AntD default placeholder color */
+}
+input::placeholder {
+  transform: translateY(-100%);
 }
 `;
 
@@ -220,6 +245,7 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
           reviewForm.setFieldsValue({
             templateName: responseData.templateName || "",
           });
+          setDistance(responseData?.totalDistance + " km");
         }
 
       } catch (error) {
@@ -299,7 +325,7 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
 
   const pickupAddress = Form.useWatch("pickup_companyAddress", routeForm) as string | undefined;
 
-  const pickupCountryCode = pickupCountryName?.match(/\(([^)]+)\)/)?.[1] || "XX";
+  const pickupCountryCode = pickupCountryName?.match(/\(([^)]+)\)/)?.[1] || pickupCountryName || "XX";
 
   const dropoffCity = Form.useWatch("dropoff_city", routeForm) as string | undefined;
   const dropoffPostal = Form.useWatch("dropoff_postalCode", routeForm) as string | undefined;
@@ -311,7 +337,7 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
 
   
 
-  const dropoffCountryCode = dropoffCountryName?.match(/\(([^)]+)\)/)?.[1] || "XX";
+  const dropoffCountryCode = dropoffCountryName?.match(/\(([^)]+)\)/)?.[1] || dropoffCountryName || "XX";
 
   useEffect(() => {
     const fetchDistance = async () => {
@@ -321,7 +347,8 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
         pickupCountryName &&
         dropoffCity &&
         dropoffPostal &&
-        dropoffCountryName
+        dropoffCountryName && 
+        !isReadOnly
       ) {
         
         setDistanceLoading(true);
@@ -372,7 +399,7 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
   const weight = Form.useWatch("weight", goodsForm);
 
   const ldmValue =
-    length && width && height ? (length * width * height).toFixed(2) : "0";
+    length && width && height ? (Math.round(length * width * height * 100) / 100).toFixed(2) : "0";
 
   const ldmPlaceholder = `${t("new-transport-request-goods.ldm-per-item", "LDM Per Item:")} ${ldmValue} m³`;
 
@@ -818,7 +845,7 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
                         },
                       ]}
                     >
-                      <Input placeholder={t("global:quantity", "Quantity")} type="number" min={1} />
+                      <InputNumber placeholder={t("global:quantity", "Quantity")} type="number" min={1} />
                     </Form.Item>
                   </Col>
 
@@ -848,7 +875,11 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
                           ]}
                           style={{ marginBottom: 10 }}
                         >
-                          <DimensionInput placeholder={t("new-transport-request-goods.dimension-length", "*Length (in meters)")} type='number' min={0} />
+                          <DimensionInput
+                            min={0}
+                            type="number"
+                            placeholder={`${t("new-transport-request-goods.dimension-length", "*Length")}`}
+                          />
                         </Form.Item>
                       </Col>
 
@@ -1004,7 +1035,7 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
                             },
                           ]}
                         >
-                          <DateRangePicker style={{ width: 375 }} placeholder={[t("global:start-date", "Start Date"), t("global:end-date", "End Date")]} />
+                          <DateRangePicker style={{ width: "100%" }} placeholder={[t("global:start-date", "Start Date"), t("global:end-date", "End Date")]} />
                         </Form.Item>
                       </Col>
                       <Col xxl={8} xl={8} lg={8} md={12} sm={24} xs={24}>
@@ -1026,7 +1057,7 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
                             },
                           ]}
                         >
-                          <DateRangePicker style={{ width: 375 }} placeholder={[t("global:start-date", "Start Date"), t("global:end-date", "End Date")]} />
+                          <DateRangePicker style={{ width: "100%" }} placeholder={[t("global:start-date", "Start Date"), t("global:end-date", "End Date")]} />
                         </Form.Item>
                       </Col>
                       <Col xxl={8} xl={8} lg={8} md={12} sm={24} xs={24}>
@@ -1060,12 +1091,12 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
                     <Row gutter={16} style={{ marginTop: 30 }}>
                       <Col xxl={8} xl={8} lg={8} md={12} sm={24} xs={24}>
                         <Form.Item name="pickupTimeRange" label="Possible Pickup Time Range">
-                          <TimeRangePicker style={{ width: 375 }} placeholder={[t("global:start-time", "Start Time"), t("global:end-time", "End Time")]} />
+                          <TimeRangePicker style={{ width: "100%" }} placeholder={[t("global:start-time", "Start Time"), t("global:end-time", "End Time")]} />
                         </Form.Item>
                       </Col>
                       <Col xxl={8} xl={8} lg={8} md={12} sm={24} xs={24}>
                         <Form.Item name="dropoffTimeRange" label="Requested Delivery Time Range">
-                          <TimeRangePicker style={{ width: 375 }} placeholder={[t("global:start-time", "Start Time"), t("global:end-time", "End Time")]} />
+                          <TimeRangePicker style={{ width: "100%" }} placeholder={[t("global:start-time", "Start Time"), t("global:end-time", "End Time")]} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -1123,7 +1154,7 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
                     </p>
                     <p style={{ margin: '5px 0', color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.goods-Quantity", "Quantity:")}</strong> {requestData.transportGoods.quantity}</p>
                     <p style={{ margin: '5px 0', color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.goods-Dimensions-per-item", "Dimensions per item:")}</strong> <br /> Length: <strong style={{ color: '#333' }}>{length}m</strong>, Width: <strong style={{ color: '#333' }}>{width}m</strong>, Heigth: <strong style={{ color: '#333' }}>{height}m</strong>, Weight: <strong style={{ color: '#333' }}>{weight}kg</strong></p>
-                    <p style={{ margin: '5px 0', color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.goods-LDM-per-item", "LDM per item:")}</strong> {ldmValue}</p>
+                    <p style={{ margin: '5px 0', color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.goods-LDM-per-item", "LDM per item:")}</strong> {ldmValue}m³</p>
                     <p style={{ margin: '5px 0', color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.goods-special-conditions", "Special Conditions:")}</strong> {[requestData.transportGoods.isCargoNotStackable && "Cargo items are not stackable", requestData.transportGoods.isIncludesAdrGoods && "Including ADR goods"].filter(Boolean).join(', ') || "—"}</p>
                   </div>
 
@@ -1133,13 +1164,23 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
                                             <FeatherIcon icon="info" color="rgb(95, 99, 242)" size={25} strokeWidth={3} />
                                         </div>
                                         <p style={{ margin: '5px 0', paddingTop: 10, color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.info-scheduleType", "Schedule Type:")}</strong> {requestData.transportInformation.dateSelectionOption===1 && ("No Granted Dates")} {requestData.transportInformation.dateSelectionOption===2 && ("Select dates")}</p>
-                                        <p style={{ margin: '5px 0', color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.info-pickUp-dateTime", "Possible Pick-Up Date Range:")}</strong> {dayjs(requestData.transportInformation.pickupDateFrom).format("YYYY.MM.DD")} - {dayjs(requestData.transportInformation.pickupDateTo).format("YYYY.MM.DD")}, {dayjs(requestData.transportInformation.pickupTimeFrom).format("HH:mm")} - {dayjs(requestData.transportInformation.pickupTimeTo).format("HH:mm")}</p>
-                                        <p style={{ margin: '5px 0', color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.info-delivery-dateTime", "Requested Delivery Date Range:")}</strong> {dayjs(requestData.transportInformation.deliveryDateFrom).format("YYYY.MM.DD")} - {dayjs(requestData.transportInformation.deliveryDateTo).format("YYYY.MM.DD")}, {dayjs(requestData.transportInformation.deliveryTimeFrom).format("HH:mm")} - {dayjs(requestData.transportInformation.deliveryTimeTo).format("HH:mm")}</p>
+                                        <p style={{ margin: '5px 0', color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.info-pickUp-dateTime", "Possible Pick-Up Date Range:")}</strong> {dayjs(requestData.transportInformation.pickupDateFrom).isValid() ? (
+                                          `${dayjs(requestData.transportInformation.pickupDateFrom).format("YYYY.MM.DD")} - ${dayjs(requestData.transportInformation.pickupDateTo).format("YYYY.MM.DD")}${
+                                            dayjs(requestData.transportInformation.pickupTimeFrom).isValid() && dayjs(requestData.transportInformation.pickupTimeTo).isValid() ? `, ${dayjs(requestData.transportInformation.pickupTimeFrom).format("HH:mm")} - ${dayjs(requestData.transportInformation.pickupTimeTo).format("HH:mm")}` : ""}`
+                                        ) : (
+                                          ""
+                                        )}</p>
+                                        <p style={{ margin: '5px 0', color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.info-delivery-dateTime", "Requested Delivery Date Range:")}</strong> {dayjs(requestData.transportInformation.deliveryDateFrom).isValid() ? (
+                                          `${dayjs(requestData.transportInformation.deliveryDateFrom).format("YYYY.MM.DD")} - ${dayjs(requestData.transportInformation.deliveryDateTo).format("YYYY.MM.DD")}${
+                                            dayjs(requestData.transportInformation.pickupTimeFrom).isValid() && dayjs(requestData.transportInformation.pickupTimeTo).isValid() ? `, ${dayjs(requestData.transportInformation.deliveryTimeFrom).format("HH:mm")} - ${dayjs(requestData.transportInformation.deliveryTimeTo).format("HH:mm")}` : ""}`
+                                        ) : ( 
+                                          ""
+                                        )}</p>
                                         <p style={{ margin: '5px 0', color: '#999' }}><strong style={{ color: '#333' }}>{t("new-transport-request-review.info-currency", "Currency:")}</strong>{" "}
                                         {
                                           codebooks?.Currency?.find(
                                             (item) => item.id === requestData.transportInformation.currencyId
-                                          )?.name || "—"
+                                          )?.name || "EUR"
                                           }</p>
                                     </div>
                                 </div>
@@ -1218,17 +1259,55 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
     },
   ];
 
-    const next = async () => {
-        try {
-            if (current === 0) await routeForm.validateFields();
-            else if (current === 1) await goodsForm.validateFields();
-            else if (current === 2) await additionalForm.validateFields();
-            else if (current === 3) await reviewForm.validateFields();
-
+  const next = async () => {
+    try {
+      if (current === 0) await routeForm.validateFields();
+      else if (current === 1) await goodsForm.validateFields();
+      else if (current === 2) {
+        await additionalForm.validateFields();
+  
+        const pickupRange = additionalForm.getFieldValue("pickupDateRange");
+        const dropoffRange = additionalForm.getFieldValue("dropoffDateRange");
+  
+        const pickupEnd = pickupRange?.[1];
+        const dropoffStart = dropoffRange?.[0];
+  
+        if (
+          pickupRange &&
+          dropoffRange &&
+          pickupEnd &&
+          dropoffStart &&
+          pickupEnd.isAfter(dropoffStart)
+        ) {
+          additionalForm.setFields([
+            {
+              name: "dropoffDateRange",
+              errors: [
+                t(
+                "shipment:delivery-date-invalid",
+                "Delivery start date/time cannot be before pickup end date/time."
+                ),
+            ],
+            },
+          ]);
+          return; 
+        }
+  
+        additionalForm.setFields([
+          {
+            name: "dropoffDateRange",
+            errors: [],
+          },
+        ]);
+      } else if (current === 3) {
+        await reviewForm.validateFields();
+      }
+  
       setCurrent(current + 1);
     } catch (err) {
     }
   };
+  
 
   const prev = () => {
     if (current > 0) {
@@ -1280,8 +1359,9 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
         <PageHeader
           ghost
           title={t("new-transport-request.title", "New Transport Request")}
-          subTitle={<>{t("new-transport-request.step", `Step ${current + 1} of ${steps?.length}`)}</>}
+          subTitle={<>{t("new-transport-request.step", {current: current + 1, total: steps?.length})}</>}
           extra={[
+            !isReadOnly &&
             hasPermission("my-templates:list") && (
               <AddNewButton
                 onClick={() => navigate("/my-requests/new-transport-request/my-templates")}
@@ -1405,11 +1485,22 @@ const RequestWizzard: React.FC<RequestWizzardProps> = ({ viewKey }) => {
                 >
                   {current === 0 && (
                     <div style={{ fontWeight: 'bold', fontSize: '19px', order: 1 }}>
-                      {t("new-transport-request-review.route-info-totalDistance", "Total Distance:")} {distanceLoading ? t("global:distance-loader", "Calculating distance, please wait...") : distance}
+                      {t("new-transport-request-review.route-info-totalDistance", "Total Distance:")} 
+                      {isReadOnly 
+                          ? (
+                              distance 
+                          ) 
+                          : distanceLoading 
+                              ? (
+                                  t("global:distance-loader", "Calculating distance, please wait...")
+                              ) 
+                              : (
+                                  distance
+                              )
+                      }
                     </div>
                   )}
 
-                  {/* Spacer/Filler for alignment */}
                   <div style={{ order: 2, flexGrow: 1 }} />
 
                   {current < steps.length - 1 && (

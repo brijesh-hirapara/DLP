@@ -55,17 +55,16 @@ namespace DLP.Application.TransportManagemen.Commands
         }
         public async Task<Unit> Handle(ShipperBookOfferRequestCommand command, CancellationToken cancellationToken)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
             try
             {
                 var now = DateTime.UtcNow;
 
                 // ✅ 1. Fetch selected offer
                 var selectedOffer = await _dbContext.TransportCarriers
+                    .Include(x=>x.TransportRequest)
                     .FirstOrDefaultAsync(x => x.Id == command.TransportCarrierId
                         && x.TransportRequestId == command.TransportRequestId
-                        && x.OrganizationId == _currentUser.OrganizationId
+                        && x.TransportRequest.OrganizationId == _currentUser.OrganizationId
                         && !x.IsDeleted,
                         cancellationToken)
                     ?? throw new Exception($"Offer not found for Transport Request {command.TransportRequestId}");
@@ -82,7 +81,7 @@ namespace DLP.Application.TransportManagemen.Commands
 
                 // ✅ 3. Mark selected offer as booked
                 selectedOffer.IsShipperBook = true;
-                selectedOffer.Status = TransportCarrierStatus.Locked; // or Booked, per enum
+                selectedOffer.Status = TransportCarrierStatus.Accepted; // or Booked, per enum
                 selectedOffer.UpdatedAt = now;
                 selectedOffer.UpdatedById = _currentUser.UserId;
 
@@ -110,15 +109,36 @@ namespace DLP.Application.TransportManagemen.Commands
 
                 if (transportRequest != null)
                 {
-                    transportRequest.Status = TransportRequestStatus.Completed;
+                    transportRequest.Status = TransportRequestStatus.UnderEvaluation;
                     transportRequest.UpdatedAt = now;
                     transportRequest.UpdatedById = _currentUser.UserId;
                     _dbContext.TransportRequests.Update(transportRequest);
+
+                    //var shipment = new Shipment
+                    //{
+                    //    Id = Guid.NewGuid(),
+                    //    RequestId = transportRequest.RequestId,
+                    //    TransportRequestId = transportRequest.Id,
+                    //    Status = ShipmentsStatus.Active,
+                    //    ShipmentCarrierStatus = ShipmentsCarrierStatus.OfferBooked,
+                    //    IsTruckAssigned = false,
+                    //    IsDeliveryConfirmed = false,
+                    //    IsPickupConfirmed = false,
+                    //    IsPODUploaded = false,
+                    //    IsPODConfirmed = false,
+                    //    ShipperOrganizationId = transportRequest.OrganizationId,
+                    //    CarrierOrganizationId = selectedOffer.OrganizationId,
+                    //    IsDeleted = false,
+                    //    CreatedAt = DateTime.UtcNow,
+                    //    CreatedById = _currentUser.UserId,
+                    //    IsActive = true,
+                    //};
+                    //await _dbContext.Shipments.AddAsync(shipment, cancellationToken);
+
                 }
 
                 // ✅ 6. Save all changes in transaction
                 await _dbContext.SaveChangesAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
 
                 // ✅ 7. Log activity
                 await _activityLogger.Add(new ActivityLogDto

@@ -1,4 +1,6 @@
 ﻿using DLP.Application.Common.Pagination;
+using DLP.Application.Organizations.DTOs;
+using DLP.Application.Organizations.Queries;
 using DLP.Application.TransportManagemen.Commands;
 using DLP.Application.TransportManagemen.DTOs;
 using DLP.Application.TransportManagemen.Queries;
@@ -107,6 +109,13 @@ namespace DLP.Controllers
             return Ok(await Mediator.Send(new DeleteTransportTemplateCommand { TransportTemplateId = id }));
         }
 
+        [HttpPut("{id}/cancel-request")]
+        [Authorize]
+        public async Task<IActionResult> CancelTransportTemplate([FromRoute] string id)
+        {
+            return Ok(await Mediator.Send(new CancelTransportTemplateCommand { TransportRequestId = id }));
+        }
+
         [HttpPost("InvitedCarriers")]
         public async Task<IActionResult> InvitedCarriers([FromBody] InvitedCarriersCommand command)
         {
@@ -176,6 +185,24 @@ namespace DLP.Controllers
             }
         }
 
+        [HttpPut("{transportRequestId}/admin-confirm-evaluation")]
+        public async Task<IActionResult> AdminConfirmEvaluation([FromRoute] Guid transportRequestId, [FromBody] Guid TransportCarrierId)
+        {
+            try
+            {
+                await Mediator.Send(new AdminConfirmEvaluationCommand
+                {
+                    TransportRequestId = transportRequestId,
+                    TransportCarrierId = TransportCarrierId,
+                });
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
         [HttpPut("{transportRequestId}/shipper-book-offer")]
         public async Task<IActionResult> ShipperBookOfferRequest([FromRoute] Guid transportRequestId, [FromQuery] Guid transportCarrierId)
         {
@@ -192,6 +219,13 @@ namespace DLP.Controllers
             {
                 return BadRequest(e.Message);
             }
+        }
+
+        [HttpGet("active-carrier")]
+        public async Task<ActionResult<PaginatedList<OrganizationCarrierDto>>> GetActiveCarrier([FromQuery] GetActiveCarrierQuery query)
+        {
+            var organizations = await Mediator.Send(query);
+            return Ok(organizations);
         }
     }
 }

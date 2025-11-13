@@ -16,8 +16,19 @@ import { formatLabel } from "utility/utility";
 import { hasPermission } from "utility/accessibility/hasPermission";
 import { useNavigate } from "react-router-dom";
 import { ProjectHeader, ProjectSorting } from "../localization/email/style";
+import { ListRequestDtoPaginatedList } from "api/models";
+import startConnection from "pages/requests/RequestSignalRService";
 
 const requestsApi = new RequestsApi();
+
+const intialData = {
+  hasNextPage: false,
+  hasPreviousPage: false,
+  items: [],
+  pageIndex: 1,
+  totalCount: 0,
+  totalPages: 0,
+};
 
 /**
  * @typedef {Object} ExtendedQuery
@@ -30,6 +41,7 @@ function ListMyRequestPage() {
   const navigate = useNavigate();
   const searchTimeout = useRef(null);
   const [requestsLoading, setRequestsLoading] = useState(false);
+  const [connection, setConnection] = useState(null);
 
   const filterKeys = [
     { id: UserFilterType.ALL, name: t("requests:select.all", "All") },
@@ -45,19 +57,44 @@ function ListMyRequestPage() {
     { id: UserFilterType.DELETED, name: t("requests:select.canceled", "Canceled") },
   ];
 
+  const [requests, setRequests] = useState(intialData);
   const { sorting, onSorterChange } = useTableSorting();
-const [requests, setRequests] = useState([]);
-const [query, setQuery] = useState({
-  status: UserFilterType.ALL,
-  search: "",
-  pageNumber: 1,
-  pageSize: 10,
-});
+  const [query, setQuery] = useState({
+    status: UserFilterType.ALL,
+    search: "",
+    pageNumber: 1,
+    pageSize: 10,
+  });
 
 useEffect(() => {
   fetchRequests();
 }, [query,sorting]);
 
+
+  // Signal R code Start
+
+  useEffect(() => {
+    initializeSignalR();
+
+    return () => {
+      if (connection) {
+        connection.stop();
+      }
+    };
+  }, []);
+
+
+  const initializeSignalR = async () => {
+    const connection = await startConnection(onReceiveBid);
+    setConnection(connection);
+  };
+
+  const onReceiveBid = async (id ,price) => {
+    // Handle the received bid data
+    await fetchRequests();
+  };
+
+  // Signal R code End
 
   const onSearchChange = (value) => {
     clearTimeout(searchTimeout.current);
@@ -103,7 +140,7 @@ useEffect(() => {
         <PageHeader
           ghost
           title={t("my-requests.title", "My Requests")}
-          subTitle={<>{requests?.length} {t("my-request:total-requests", "Total Requests")}</>}
+          subTitle={<>{requests?.totalCount} {t("my-request:total-requests", "Total Requests")}</>}
           buttons={[
             <ExportButtonPageApiHeader
               key="1"
@@ -116,7 +153,7 @@ useEffect(() => {
               from={""}
               to={""}
             />,
-            (hasPermission("languages:add") || true) && (
+            (hasPermission("new-transport-request:add")) && (
                   <Button
                     onClick={() => navigate("/my-requests/new-transport-request")}
                     className="btn-add_new"

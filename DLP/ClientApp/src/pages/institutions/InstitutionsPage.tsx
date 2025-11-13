@@ -84,7 +84,7 @@ export const InstitutionsPage = () => {
 
   const filterKeys = [
     { id: RequestTypeNew.ALL, name: t("global.all", "All") },
-    { id: RequestTypeNew.RegistraterAsShipper, name: t("company.shipper", "Shipper") },
+    { id: RequestTypeNew.RegistraterAsShipper, name: t("company.purchaser", "Purchaser") },
     { id: RequestTypeNew.RegistraterAsCarrier, name: t("company.carrier", "Carrier") },
   ].filter(Boolean);
 
@@ -314,7 +314,7 @@ export const InstitutionsPage = () => {
         name,
         contactPersonFirstName,
         contactPersonLastName,
-        typeDesc: type === 1 ? "Shipper" : type === 2 ? "Carrier" : "",
+        typeDesc: type === 1 ? "Purchaser" : type === 2 ? "Carrier" : "",
         statusDesc: (
           <div className="table-status">
             {getRequestStatus(

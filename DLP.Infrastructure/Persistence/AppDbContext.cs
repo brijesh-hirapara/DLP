@@ -83,6 +83,9 @@ public class AppDbContext : IdentityDbContext<User, Role, string, IdentityUserCl
     public DbSet<TransportGoods> TransportGoods { get; set; }
     public DbSet<TransportInformation> TransportInformations { get; set; }
     public DbSet<TransportCarrier> TransportCarriers { get; set; }
+    public DbSet<Shipment> Shipments { get; set; }
+    public DbSet<ShipmentAssignTruck> ShipmentAssignTrucks { get; set; }
+    public DbSet<UploadPODFile> UploadPODFiles { get; set; }
 
     public override DatabaseFacade Database => base.Database;
 

@@ -52,7 +52,7 @@ namespace DLP.Application.TransportManagemen.Queries
                                .Include(x => x.TransportCarrier.Where(c => !c.IsDeleted && c.OrganizationId == _currentUserService.OrganizationId))
                                     .ThenInclude(p=>p.TruckType)
                                     
-                               .FirstOrDefaultAsync(r => !r.IsDeleted && r.Id == query.Id)
+                               .FirstOrDefaultAsync(r =>  r.Id == query.Id)
 
                 ?? throw new ArgumentException($"Transport Request {query.Id} not found");
 

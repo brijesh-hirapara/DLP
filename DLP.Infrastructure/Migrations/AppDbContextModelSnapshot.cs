@@ -1676,6 +1676,153 @@ namespace DLP.Infrastructure.Migrations
                     b.ToTable("ServiceTechnicianReport");
                 });
 
+            modelBuilder.Entity("DLP.Domain.Entities.Shipment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("CarrierOrganizationId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CreatedById")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("DeliveryConfirmedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeliveryConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsPODConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsPODUploaded")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsPickupConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsTruckAssigned")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("PODConfirmedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("PODUploadedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("PickupConfirmedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("RequestId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("ShipmentCarrierStatus")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ShipperOrganizationId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TransportRequestId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("TruckAssignedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("UpdatedById")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarrierOrganizationId");
+
+                    b.HasIndex("ShipperOrganizationId");
+
+                    b.HasIndex("TransportRequestId");
+
+                    b.ToTable("Shipments");
+                });
+
+            modelBuilder.Entity("DLP.Domain.Entities.ShipmentAssignTruck", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CreatedById")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("PassportId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RequestId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid>("ShipmentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("TransportRequestId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("TruckDriverFirstName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TruckDriverLastName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TruckNumber")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("UpdatedById")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShipmentId");
+
+                    b.HasIndex("TransportRequestId");
+
+                    b.ToTable("ShipmentAssignTrucks");
+                });
+
             modelBuilder.Entity("DLP.Domain.Entities.StateEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1781,6 +1928,9 @@ namespace DLP.Infrastructure.Migrations
 
                     b.Property<decimal?>("ProfitMargin")
                         .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime?>("ShipperBookAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -1981,6 +2131,9 @@ namespace DLP.Infrastructure.Migrations
                     b.Property<int>("Accessibility")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("ConfirmEvaluationAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -1988,6 +2141,9 @@ namespace DLP.Infrastructure.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsConfirmEvaluation")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsDeleted")
@@ -2023,6 +2179,52 @@ namespace DLP.Infrastructure.Migrations
                     b.HasIndex("OrganizationId");
 
                     b.ToTable("TransportRequests");
+                });
+
+            modelBuilder.Entity("DLP.Domain.Entities.UploadPODFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ActionTakenBy")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("LastSyncAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("ShipmentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("SyncToken")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShipmentId");
+
+                    b.ToTable("UploadPODFiles");
                 });
 
             modelBuilder.Entity("DLP.Domain.Entities.User", b =>
@@ -2202,6 +2404,9 @@ namespace DLP.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("char(36)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -2212,6 +2417,8 @@ namespace DLP.Infrastructure.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("VehicleFleetRequests");
                 });
@@ -2946,6 +3153,48 @@ namespace DLP.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DLP.Domain.Entities.Shipment", b =>
+                {
+                    b.HasOne("DLP.Domain.Entities.Organization", "CarrierOrganization")
+                        .WithMany()
+                        .HasForeignKey("CarrierOrganizationId");
+
+                    b.HasOne("DLP.Domain.Entities.Organization", "ShipperOrganization")
+                        .WithMany()
+                        .HasForeignKey("ShipperOrganizationId");
+
+                    b.HasOne("DLP.Domain.Entities.TransportRequest", "TransportRequest")
+                        .WithMany()
+                        .HasForeignKey("TransportRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CarrierOrganization");
+
+                    b.Navigation("ShipperOrganization");
+
+                    b.Navigation("TransportRequest");
+                });
+
+            modelBuilder.Entity("DLP.Domain.Entities.ShipmentAssignTruck", b =>
+                {
+                    b.HasOne("DLP.Domain.Entities.Shipment", "Shipment")
+                        .WithMany()
+                        .HasForeignKey("ShipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DLP.Domain.Entities.TransportRequest", "TransportRequest")
+                        .WithMany()
+                        .HasForeignKey("TransportRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Shipment");
+
+                    b.Navigation("TransportRequest");
+                });
+
             modelBuilder.Entity("DLP.Domain.Entities.Translation", b =>
                 {
                     b.HasOne("DLP.Domain.Entities.Language", "Language")
@@ -3065,6 +3314,17 @@ namespace DLP.Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
+            modelBuilder.Entity("DLP.Domain.Entities.UploadPODFile", b =>
+                {
+                    b.HasOne("DLP.Domain.Entities.Shipment", "Shipment")
+                        .WithMany("UploadPODFiles")
+                        .HasForeignKey("ShipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Shipment");
+                });
+
             modelBuilder.Entity("DLP.Domain.Entities.User", b =>
                 {
                     b.HasOne("DLP.Domain.Entities.User", "CreatedBy")
@@ -3110,6 +3370,15 @@ namespace DLP.Infrastructure.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DLP.Domain.Entities.VehicleFleetRequest", b =>
+                {
+                    b.HasOne("DLP.Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId");
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
@@ -3216,6 +3485,11 @@ namespace DLP.Infrastructure.Migrations
             modelBuilder.Entity("DLP.Domain.Entities.ServiceTechnicianReport", b =>
                 {
                     b.Navigation("ServiceTechnicianAnnualReport");
+                });
+
+            modelBuilder.Entity("DLP.Domain.Entities.Shipment", b =>
+                {
+                    b.Navigation("UploadPODFiles");
                 });
 
             modelBuilder.Entity("DLP.Domain.Entities.StateEntity", b =>

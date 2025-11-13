@@ -55,7 +55,6 @@ export const CreateInstitutionModal = ({
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const isEditMode = !!institutionToEdit;
-  console.log(isEditMode,"isEditMode");
   const commonData = useContext(CommonDataContext);
   const { municipalities, userGroups, stateEntities, cantons } = commonData as any;
 

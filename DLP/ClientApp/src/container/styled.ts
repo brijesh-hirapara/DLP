@@ -2415,7 +2415,8 @@ const OfferCardStyled = Styled(Card)`
   border-radius: 4px;
   overflow: hidden;
   background: #fff;
-  min-width: 300px;
+//   width: 100%;   
+//   min-width: 320px;
   box-shadow: 0px 4px 25px 0px #e8eaee;
   border: 1px solid #f1f1f4;
   padding: 0 0 24px 0;

@@ -3120,7 +3120,10 @@ color: #272B41 !important;
   display: flex; justify-content: space-between; 
 }
 .flex-gap40 { 
-  display: flex; gap: 40px; justify-content: space-between; 
+  display: flex; gap: 40px; 
+  justify-content: space-between;  
+  /* flex-direction: column;  */
+  /* flex: 1 1 auto; */
 }
 .flex-1 { 
   flex: 1; 
@@ -3405,7 +3408,7 @@ color: #272B41 !important;
 }
 
 .manage-transport-offers .card-button {
-  width: 140px;
+  min-width: 140px;
   height: 40px;
   border-radius: 6px;
 }
@@ -3496,8 +3499,9 @@ color: #272B41 !important;
 .shipment-card .card-price-pill {
   background: #5865f2;
   border-radius: 50%;
-  width: 64px;
-  height: 64px;
+  min-width: 72px;
+  /* width: 64px; */
+  height: 72px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3505,6 +3509,9 @@ color: #272B41 !important;
   color: #fff;
   font-weight: 700;
   box-shadow: 0 1px 8px rgba(88,101,242,0.22);
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  line-height: 1;
 }
 .shipment-card .card-price-value {
   font-size: 22px;
@@ -3579,7 +3586,7 @@ color: #272B41 !important;
 }
 .shipment-card .current-status {
   background: #21C998;
-  color: #CAF3E4;
+  color: #ffffff;
   font-size: 10px;
   font-weight: 600;
   padding: 2px 18px;
@@ -3628,4 +3635,31 @@ color: #272B41 !important;
   display: flex;
   align-items: center;
   height: 100%;
+}
+
+
+/* 08-11-2025 for date picker width adjustment */
+
+
+.rangepicker-responsive .ant-picker,
+.ant-picker-range {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+/* Target the Start date input inside the RangePicker */
+.rangepicker-responsive .ant-picker-range .ant-picker-input:first-child input {
+  margin-left: 8px; /* or whatever padding you like */
+}
+
+/* If you want both start and end to be spaced */
+.rangepicker-responsive .ant-picker-range .ant-picker-input input {
+  padding-left: 8px;
+}
+
+.shipper-accepted-request {
+  background: rgb(238, 247, 255) !important;
+  border: 1.5px solid rgb(157, 164, 247) !important;
+  border-radius: 8px !important;
 }

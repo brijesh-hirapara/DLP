@@ -85,7 +85,6 @@ export const CompanyInfoForm = ({
     useEffect(() => {
 
         if (institutionToEdit) {
-            console.log(institutionToEdit, "institutionToEdit")
             setFieldsForEdit(institutionToEdit);
             setQuestionnaires(institutionToEdit?.questionnaires);
         }

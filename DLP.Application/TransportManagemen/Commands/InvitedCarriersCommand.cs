@@ -77,6 +77,22 @@ namespace DLP.Application.TransportManagemen.Commands
                 if (existingRequest == null)
                     throw new ApplicationException("Transport Request not found.");
 
+                // ✅ Throw error if status is not Active
+                if (existingRequest.Status != TransportRequestStatus.Active)
+                {
+                    var message = $"Cannot invite carriers. Transport Request '{existingRequest.RequestId}' is not Active (Current status: {existingRequest.Status}).";
+
+                    await _activityLogger.Add(new ActivityLogDto
+                    {
+                        UserId = _currentUser.UserId,
+                        LogTypeId = (int)LogTypeEnum.ERROR,
+                        Activity = message
+                    });
+
+                    throw new ApplicationException(message);
+                }
+
+
                 // existing invited organization IDs (Guid)
                 var existingOrgIds = existingRequest.TransportCarrier
                     .Select(tc => tc.OrganizationId)

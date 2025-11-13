@@ -114,6 +114,86 @@ export const OrganizationsApiAxiosParamCreator = function (configuration?: Confi
                 options: localVarRequestOptions,
             };
         },
+          /**
+         * 
+         * @param {number} [pageNumber] 
+         * @param {number} [pageSize] 
+         * @param {string} [sortBy] 
+         * @param {string} [sortType] 
+         * @param {string} [search] 
+         * @param {string} [municipalityId] 
+         * @param {string} [entityId] 
+         * @param {string} [sortingPropertyName] 
+         * @param {boolean} [sortingIsDescending] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+          apiInviteCarrierGet: async (pageNumber?: number, pageSize?: number, sortBy?: string, sortType?: string, search?: string, municipalityId?: string, entityId?: string,type?:number,sortingPropertyName?: string, sortingIsDescending?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/TransportManagement/active-carrier`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            if (pageNumber !== undefined) {
+                localVarQueryParameter['PageNumber'] = pageNumber;
+            }
+
+            if (pageSize !== undefined) {
+                localVarQueryParameter['PageSize'] = pageSize;
+            }
+
+            if (sortBy !== undefined) {
+                localVarQueryParameter['SortBy'] = sortBy;
+            }
+
+            if (sortType !== undefined) {
+                localVarQueryParameter['SortType'] = sortType;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['Search'] = search;
+            }
+
+            if (municipalityId !== undefined) {
+                localVarQueryParameter['MunicipalityId'] = municipalityId;
+            }
+
+            if (entityId !== undefined) {
+                localVarQueryParameter['EntityId'] = entityId;
+            }
+
+            if(type !== undefined){
+                localVarQueryParameter['Type'] = type;
+            }
+
+            if (sortingPropertyName !== undefined) {
+                localVarQueryParameter['Sorting.PropertyName'] = sortingPropertyName;
+            }
+
+            if (sortingIsDescending !== undefined) {
+                localVarQueryParameter['Sorting.IsDescending'] = sortingIsDescending;
+            }
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
         /**
          * 
          * @param {string} id 
@@ -364,6 +444,23 @@ export const OrganizationsApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiOrganizationsGet(pageNumber, pageSize, sortBy, sortType, search, municipalityId, entityId,type,sortingPropertyName,sortingIsDescending, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+
+           /**
+         * 
+         * @param {number} [pageNumber] 
+         * @param {number} [pageSize] 
+         * @param {string} [sortBy] 
+         * @param {string} [sortType] 
+         * @param {string} [search] 
+         * @param {string} [municipalityId] 
+         * @param {string} [entityId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+           async apiInviteCarrierGet(pageNumber?: number, pageSize?: number, sortBy?: string, sortType?: string, search?: string, municipalityId?: string, entityId?: string,type?:number,sortingPropertyName?: string, sortingIsDescending?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<OrganizationDtoPaginatedList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiInviteCarrierGet(pageNumber, pageSize, sortBy, sortType, search, municipalityId, entityId,type,sortingPropertyName,sortingIsDescending, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        }, 
         /**
          * 
          * @param {string} id 
@@ -708,6 +805,17 @@ export class OrganizationsApi extends BaseAPI {
     public apiOrganizationsGet(requestParameters: OrganizationsApiApiOrganizationsGetRequest = {}, options?: AxiosRequestConfig) {
         return OrganizationsApiFp(this.configuration).apiOrganizationsGet(requestParameters.pageNumber, requestParameters.pageSize, requestParameters.sortBy, requestParameters.sortType, requestParameters.search, requestParameters.municipalityId, requestParameters.entityId,requestParameters.type,requestParameters.sortingPropertyName, requestParameters.sortingIsDescending, options).then((request) => request(this.axios, this.basePath));
     }
+
+        /**
+     * 
+     * @param {OrganizationsApiApiOrganizationsGetRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OrganizationsApi
+     */
+        public apiInviteCarrierGet(requestParameters: OrganizationsApiApiOrganizationsGetRequest = {}, options?: AxiosRequestConfig) {
+            return OrganizationsApiFp(this.configuration).apiInviteCarrierGet(requestParameters.pageNumber, requestParameters.pageSize, requestParameters.sortBy, requestParameters.sortType, requestParameters.search, requestParameters.municipalityId, requestParameters.entityId,requestParameters.type,requestParameters.sortingPropertyName, requestParameters.sortingIsDescending, options).then((request) => request(this.axios, this.basePath));
+        }
 
     /**
      * 

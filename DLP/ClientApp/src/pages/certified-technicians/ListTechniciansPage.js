@@ -56,7 +56,6 @@ function ListTechniciansPage() {
 
   const getCertifiedTechnicians = async () => {
     setIsLoading(true);
-    console.log({ sorting });
     const { data } =
       await certifiedTechniciansApi.apiCertifiedTechniciansListGet({
         ...request,

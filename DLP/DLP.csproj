@@ -24,6 +24,7 @@
     <PackageReference Include="ClosedXML" Version="0.102.3" />
     <PackageReference Include="EPPlus" Version="7.0.9" />
     <PackageReference Include="iTextSharp" Version="5.5.13.4" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="7.0.8" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.2" />
     <PackageReference Include="Hangfire.MySqlStorage" Version="2.0.3" />
@@ -819,6 +820,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="Templates\CarrierSubmitOfferToAdmin.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
     <Content Update="Templates\CarrierOfferInvite.cshtml">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

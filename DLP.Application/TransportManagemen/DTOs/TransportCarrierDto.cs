@@ -75,11 +75,20 @@ namespace DLP.Application.TransportManagemen.DTOs
                 return ((TransportCarrierInvitationStatus)InvitationStatus).GetDescription();
             }
         }
+        public int Status { get; set; }
+        public string StatusDesc
+        {
+            get
+            {
+                return ((TransportCarrierStatus)Status).GetDescription();
+            }
+        }
 
         public void Mapping(TypeAdapterConfig config)
         {
             config.NewConfig<TransportCarrier, TransportCarrierListDto>()
                 .Map(dest => dest.InvitationStatus, src => (int)src.InvitationStatus)
+                .Map(dest => dest.Status, src => (int)src.Status)
                 .Map(dest => dest.ShipperName, src => src.TransportRequest.Organization.Name)
                 .Map(dest => dest.OrganizationName, src => src.Organization.Name);
         }
@@ -102,6 +111,8 @@ namespace DLP.Application.TransportManagemen.DTOs
         public DateTime? ExpiryDateTime { get; set; }
         public bool IsExpired { get; set; }
         public bool IsScheduleDiffers { get; set; }
+        public bool IsAdminApproved { get; set; } = false;
+        public bool IsShipperBook { get; set; } = false;
         public int Status { get; set; }
         public string StatusDesc
         {
@@ -131,14 +142,15 @@ namespace DLP.Application.TransportManagemen.DTOs
         public DateTime? DeliveryDateTo { get; set; }
         public string? DeliveryTimeFrom { get; set; }
         public string? DeliveryTimeTo { get; set; }
+        public bool IsConfirmEvaluation { get; set; } = false;
+        public DateTime? ConfirmEvaluationAt { get; set; }
 
         public void Mapping(TypeAdapterConfig config)
         {
-            config.NewConfig<TransportCarrier, TransportCarrierChooseOfferDto>()
+            config.NewConfig<TransportCarrier, TransportCarrierAdminOfferDto>()
                 .Map(dest => dest.Status, src => (int)src.Status)
                 .Map(dest => dest.InvitationStatus, src => (int)src.InvitationStatus)
-                .Map(dest => dest.TruckTypeName, src => src.TruckType != null ? src.TruckType.Name : null).Map(dest => dest.CurrencyName, src => src.TransportRequest.TransportInformation != null &&
-                                   src.TransportRequest.TransportInformation.Any(ti => ti.Currency != null) ? src.TransportRequest.TransportInformation.First().Currency.Name : null)
+                .Map(dest => dest.TruckTypeName, src => src.TruckType != null ? src.TruckType.Name : null)
                 .Map(dest => dest.PickupDateFrom, src => src.TransportRequest.TransportInformation.Select(ti => ti.PickupDateFrom).FirstOrDefault())
                 .Map(dest => dest.PickupDateTo, src => src.TransportRequest.TransportInformation.Select(ti => ti.PickupDateTo).FirstOrDefault())
                 .Map(dest => dest.PickupTimeFrom, src => src.TransportRequest.TransportInformation.Select(ti => ti.PickupTimeFrom).FirstOrDefault())
@@ -146,7 +158,11 @@ namespace DLP.Application.TransportManagemen.DTOs
                 .Map(dest => dest.DeliveryDateFrom, src => src.TransportRequest.TransportInformation.Select(ti => ti.DeliveryDateFrom).FirstOrDefault())
                 .Map(dest => dest.DeliveryDateTo, src => src.TransportRequest.TransportInformation.Select(ti => ti.DeliveryDateTo).FirstOrDefault())
                 .Map(dest => dest.DeliveryTimeFrom, src => src.TransportRequest.TransportInformation.Select(ti => ti.DeliveryTimeFrom).FirstOrDefault())
-                .Map(dest => dest.DeliveryTimeTo, src => src.TransportRequest.TransportInformation.Select(ti => ti.DeliveryTimeTo).FirstOrDefault());
+                .Map(dest => dest.DeliveryTimeTo, src => src.TransportRequest.TransportInformation.Select(ti => ti.DeliveryTimeTo).FirstOrDefault())
+                .Map(dest => dest.IsConfirmEvaluation, src => src.TransportRequest.IsConfirmEvaluation)
+                .Map(dest => dest.ConfirmEvaluationAt, src => src.TransportRequest.ConfirmEvaluationAt)
+                .Map(dest => dest.CurrencyName, src => src.TransportRequest.TransportInformation != null &&
+                                   src.TransportRequest.TransportInformation.Any(ti => ti.Currency != null) ? src.TransportRequest.TransportInformation.First().Currency.Name : null);
             ;
         }
     }
@@ -166,6 +182,9 @@ namespace DLP.Application.TransportManagemen.DTOs
         public DateTime? ExpiryDateTime { get; set; }
         public bool IsExpired { get; set; }
         public bool IsScheduleDiffers { get; set; }
+        public bool IsAdminApproved { get; set; } = false;
+        public bool IsShipperBook { get; set; } = false;
+        public DateTime ShipperBookAt { get; set; }
         public int Status { get; set; }
         public string StatusDesc
         {

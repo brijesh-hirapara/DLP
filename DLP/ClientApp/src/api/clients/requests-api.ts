@@ -21,7 +21,7 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from '../base';
 // @ts-ignore
-import { ApproveRequestDto, RequestTypeNew, TransportRequestStatus, VehicleFleetRequestStatus } from '../models';
+import { ApproveRequestDto, RequestTypeNew, ShipmentsStatus, TransportRequestStatus, VehicleFleetRequestStatus } from '../models';
 // @ts-ignore
 import { AreaOfExpertise } from '../models';
 // @ts-ignore
@@ -43,6 +43,8 @@ import { TransportRequest } from 'api/models/transport-request';
 import { SubmitOfferTransportManageDto } from 'api/models/submit-offer-transport-manage-dto';
 import { ListTransportManagementDtoPaginatedList } from 'api/models/list-transport-management-dto-paginated-list';
 import { SubmitOfferAdminTransportManageDto } from 'api/models/submit-offer-admin-approve-transport-manage-dto';
+import { ListShipmentsDtoPaginatedList } from 'api/models/list-shipments-dto-paginated-list';
+import { AssignTruckShipmentsDto } from 'api/models/assign-truck-shipments-dto';
 /**
  * RequestsApi - axios parameter creator
  * @export
@@ -288,12 +290,16 @@ export const RequestsApiAxiosParamCreator = function (configuration?: Configurat
          * @param {boolean} [listArchived] 
          * @param {TransportRequestStatus} [type] 
          * @param {string} [search] 
+         * @param {string} [pickupPostalCode] 
+         * @param {string} [deliveryPostalCode] 
+         * @param {string} [pickupDate] 
+         * @param {string} [deliveryDate] 
          * @param {string} [sortingPropertyName] 
          * @param {boolean} [sortingIsDescending] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiTransportManagementCarrierListGet: async (pageNumber?: number,pageSize?: number,listArchived?: boolean, type?: TransportRequestStatus, search?: string, sortingPropertyName?: string, sortingIsDescending?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiTransportManagementCarrierListGet: async (pageNumber?: number,pageSize?: number,listArchived?: boolean, type?: TransportRequestStatus, search?: string,pickupPostalCode?: string, deliveryPostalCode?: string,pickupDate?: string, deliveryDate?: string, sortingPropertyName?: string, sortingIsDescending?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/TransportManagement/carrier-list`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -338,6 +344,18 @@ export const RequestsApiAxiosParamCreator = function (configuration?: Configurat
             }
 
             if (search !== undefined) {
+                localVarQueryParameter['PickupPostalCode'] = pickupPostalCode;
+            }
+            if (search !== undefined) {
+                localVarQueryParameter['DeliveryPostalCode'] = deliveryPostalCode;
+            }
+            if (search !== undefined) {
+                localVarQueryParameter['PickupDate'] = pickupDate;
+            }
+            if (search !== undefined) {
+                localVarQueryParameter['DeliveryDate'] = deliveryDate;
+            }
+            if (search !== undefined) {
                 localVarQueryParameter['Search'] = search;
             }
 
@@ -361,6 +379,118 @@ export const RequestsApiAxiosParamCreator = function (configuration?: Configurat
             };
         },
 
+         /**
+         * 
+         * @param {number} [pageNumber] 
+         * @param {number} [pageSize] 
+         * @param {ShipmentsStatus} [status] 
+         * @param {string} [search] 
+         * @param {string} [sortingPropertyName] 
+         * @param {boolean} [sortingIsDescending] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiCarrierOrdersListGet: async (pageNumber?: number,pageSize?: number, status?: ShipmentsStatus, search?: string, sortingPropertyName?: string, sortingIsDescending?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Shipments/carrier-list`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            if (pageNumber !== undefined) {
+                localVarQueryParameter['PageNumber'] = pageNumber;
+            }
+
+            if (pageSize !== undefined) {
+                localVarQueryParameter['PageSize'] = pageSize;
+            }
+
+            // if (idNumber !== undefined) {
+            //     localVarQueryParameter['IdNumber'] = idNumber;
+            // }
+
+            // if (companyName !== undefined) {
+            //     localVarQueryParameter['CompanyName'] = companyName;
+            // }
+
+            if (status !== undefined) {
+                localVarQueryParameter['Status'] = status;
+            }
+
+            // if (listArchived) {
+            //     localVarQueryParameter['Status'] = type;
+            // }
+
+            if (search !== undefined) {
+                localVarQueryParameter['Search'] = search;
+            }
+
+            if (sortingPropertyName !== undefined) {
+                localVarQueryParameter['Sorting.PropertyName'] = sortingPropertyName;
+            }
+
+            if (sortingIsDescending !== undefined) {
+                localVarQueryParameter['Sorting.IsDescending'] = sortingIsDescending;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        
+        
+        /**
+         * 
+         * @param {string} shipmentId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiCarrierOrdersDetailsIdGet: async (shipmentId : string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'fileId' is not null or undefined
+            assertParamExists('apiCarrierOrdersDetailsIdGet', 'shipmentId', shipmentId )
+            const localVarPath = `/api/Shipments/{shipmentId }`
+                .replace(`{${"shipmentId "}}`, encodeURIComponent(String(shipmentId )));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
         
         /**
          * 
@@ -487,6 +617,69 @@ export const RequestsApiAxiosParamCreator = function (configuration?: Configurat
                 options: localVarRequestOptions,
             };
         },
+
+            /**
+         * 
+         * @param {number} [pageNumber] 
+         * @param {number} [pageSize] 
+         * @param {string} [search] 
+         * @param {string} [sortingPropertyName] 
+         * @param {boolean} [sortingIsDescending] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+            apiShipmentsListGet: async (pageNumber?: number, pageSize?: number, search?: string, sortingPropertyName?: string, sortingIsDescending?: boolean,status?:number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+                const localVarPath = `/api/Shipments`;
+                // use dummy base URL string because the URL constructor only accepts absolute URLs.
+                const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+                let baseOptions;
+                if (configuration) {
+                    baseOptions = configuration.baseOptions;
+                }
+    
+                const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+                const localVarHeaderParameter = {} as any;
+                const localVarQueryParameter = {} as any;
+    
+                // authentication Bearer required
+                await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+    
+                if (pageNumber !== undefined) {
+                    localVarQueryParameter['PageNumber'] = pageNumber;
+                }
+    
+                if (pageSize !== undefined) {
+                    localVarQueryParameter['PageSize'] = pageSize;
+                }
+    
+                if (search !== undefined) {
+                    localVarQueryParameter['Search'] = search;
+                }
+    
+                if (status !== undefined) {
+                    localVarQueryParameter['Status'] = status;
+                }
+    
+                if (sortingPropertyName !== undefined) {
+                    localVarQueryParameter['Sorting.PropertyName'] = sortingPropertyName;
+                }
+    
+                if (sortingIsDescending !== undefined) {
+                    localVarQueryParameter['Sorting.IsDescending'] = sortingIsDescending;
+                }
+    
+    
+        
+                setSearchParams(localVarUrlObj, localVarQueryParameter);
+                let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+                localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+    
+                return {
+                    url: toPathString(localVarUrlObj),
+                    options: localVarRequestOptions,
+                };
+            },
+
         /**
          * 
          * @param {number} [pageNumber] 
@@ -651,6 +844,92 @@ export const RequestsApiAxiosParamCreator = function (configuration?: Configurat
                 options: localVarRequestOptions,
             };
         },
+
+         /**
+        * @param {string} [transportRequestId ] 
+        * @param {SubmitOfferAdminTransportManageDto} [approveRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+        */
+
+         apiAdminConfirmEvaluationPut: async (transportRequestId?: string, approveRequestDto?: SubmitOfferAdminTransportManageDto,options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+
+            assertParamExists('apiRequestsIdApprovePut', 'transportRequestId', transportRequestId)
+            const localVarPath = `/api/TransportManagement/{transportRequestId}/admin-confirm-evaluation`
+               .replace(`{${"transportRequestId"}}`, encodeURIComponent(String(transportRequestId)));
+           // use dummy base URL string because the URL constructor only accepts absolute URLs.
+           const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+           let baseOptions;
+           if (configuration) {
+               baseOptions = configuration.baseOptions;
+           }
+
+           const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+           const localVarHeaderParameter = {} as any;
+           const localVarQueryParameter = {} as any;
+
+           // authentication Bearer required
+           await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+   
+           localVarHeaderParameter['Content-Type'] = 'application/json';
+
+           setSearchParams(localVarUrlObj, localVarQueryParameter);
+           let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+           localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+           localVarRequestOptions.data = serializeDataIfNeeded(approveRequestDto?.id, localVarRequestOptions, configuration)
+
+           return {
+               url: toPathString(localVarUrlObj),
+               options: localVarRequestOptions,
+           };
+       },
+
+
+          /**
+         * @param {string} [transportRequestId ] 
+        * @param {string} [transportCarrierId ] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+        */
+
+          apiChooseOfferPut: async (transportRequestId?: string, transportCarrierId?: string,options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+
+            assertParamExists('apiRequestsIdApprovePut', 'transportRequestId', transportRequestId)
+            const localVarPath = `/api/TransportManagement/{transportRequestId}/shipper-book-offer`
+               .replace(`{${"transportRequestId"}}`, encodeURIComponent(String(transportRequestId)));
+           // use dummy base URL string because the URL constructor only accepts absolute URLs.
+           const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+           let baseOptions;
+           if (configuration) {
+               baseOptions = configuration.baseOptions;
+           }
+
+           const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+           const localVarHeaderParameter = {} as any;
+           const localVarQueryParameter = {} as any;
+
+           if (transportCarrierId !== undefined) {
+            localVarQueryParameter['transportCarrierId'] = transportCarrierId;
+          }
+
+           // authentication Bearer required
+           await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+   
+           localVarHeaderParameter['Content-Type'] = 'application/json';
+
+           setSearchParams(localVarUrlObj, localVarQueryParameter);
+           let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+           localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+           return {
+               url: toPathString(localVarUrlObj),
+               options: localVarRequestOptions,
+           };
+       },
+
         /**
          * 
          * @param {number} [pageNumber] 
@@ -719,7 +998,7 @@ export const RequestsApiAxiosParamCreator = function (configuration?: Configurat
             };
         },
         
-                        /**
+        /**
          * 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
@@ -802,7 +1081,7 @@ export const RequestsApiAxiosParamCreator = function (configuration?: Configurat
                     };
                 },
 
-                /**
+        /**
          * 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
@@ -963,6 +1242,87 @@ export const RequestsApiAxiosParamCreator = function (configuration?: Configurat
                 options: localVarRequestOptions,
             };
         },
+
+        /**
+         * 
+         * @param {string} shipmentId 
+         * @param {AssignTruckShipmentsDto} [assignTruckShipmentsDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShipmentsIdAssignTruckPost: async (shipmentId : string, assignTruckShipmentsDto?: AssignTruckShipmentsDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiShipmentsIdAssignTruckPut', 'shipmentId', shipmentId)
+            const localVarPath = `/api/Shipments/{shipmentId}/assign-truck`
+                .replace(`{${"shipmentId"}}`, encodeURIComponent(String(shipmentId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(assignTruckShipmentsDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        
+        /**
+         * 
+         * @param {string} shipmentId 
+         * @param {AssignTruckShipmentsDto} [assignTruckShipmentsDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShipmentsIdConfirmPickupDeliveryPut: async (shipmentId : string, assignTruckShipmentsDto?: AssignTruckShipmentsDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiShipmentsIdAssignTruckPut', 'shipmentId', shipmentId)
+            const localVarPath = `/api/Shipments/{shipmentId}/confirm-pickup-delivery`
+                .replace(`{${"shipmentId"}}`, encodeURIComponent(String(shipmentId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(assignTruckShipmentsDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+
 
          /**
          * 
@@ -1613,6 +1973,57 @@ export const RequestsApiAxiosParamCreator = function (configuration?: Configurat
                     options: localVarRequestOptions,
                 };
             },
+            /**
+         * 
+         * @param {string} [shipmentId] 
+         * @param {Array<string>} [files]
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+             apiShipmentsUploadIdPost: async (shipmentId?: string, files?: File[],  options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+                const localVarPath = `/api/Shipments/upload-pod`;
+                // use dummy base URL string because the URL constructor only accepts absolute URLs.
+                const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+                let baseOptions;
+                if (configuration) {
+                    baseOptions = configuration.baseOptions;
+                }
+    
+                const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+                const localVarHeaderParameter = {} as any;
+                const localVarQueryParameter = {} as any;
+                const localVarFormParams = new ((configuration && configuration.formDataCtor) || FormData)();
+    
+                // authentication Bearer required
+                await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+    
+    
+                if (shipmentId) {
+                    localVarFormParams.append("ShipmentId", shipmentId);
+                }
+            //     if (files) {
+            //     files.forEach(file => {
+            //         localVarFormParams.append("Files", file); // append each value separately
+            //     });
+            // }
+                if (files && files.length) {
+                    files.forEach((file: File) => {
+                    localVarFormParams.append("Files", file);
+                    });
+                }
+              
+                localVarHeaderParameter['Content-Type'] = 'multipart/form-data';
+        
+                setSearchParams(localVarUrlObj, localVarQueryParameter);
+                let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+                localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+                localVarRequestOptions.data = localVarFormParams;
+    
+                return {
+                    url: toPathString(localVarUrlObj),
+                    options: localVarRequestOptions,
+                };
+            },
     }
 };
 
@@ -1690,15 +2101,46 @@ export const RequestsApiFp = function(configuration?: Configuration) {
          * @param {boolean} [listArchived] 
          * @param {TransportRequestStatus} [type] 
          * @param {string} [search] 
+         * @param {string} [pickupPostalCode] 
+         * @param {string} [deliveryPostalCode] 
+         * @param {string} [pickupDate] 
+         * @param {string} [deliveryDate] 
          * @param {string} [sortingPropertyName] 
          * @param {boolean} [sortingIsDescending] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiTransportManagementCarrierListGet(pageNumber?: number, pageSize?: number, listArchived?: boolean, type?: TransportRequestStatus, search?: string, sortingPropertyName?: string, sortingIsDescending?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ListTransportManagementDtoPaginatedList>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiTransportManagementCarrierListGet(pageNumber, pageSize, listArchived, type, search, sortingPropertyName, sortingIsDescending, options);
+        async apiTransportManagementCarrierListGet(pageNumber?: number, pageSize?: number, listArchived?: boolean, type?: TransportRequestStatus, search?: string, pickupPostalCode?: string, deliveryPostalCode?: string,pickupDate?: string, deliveryDate?: string,sortingPropertyName?: string, sortingIsDescending?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ListTransportManagementDtoPaginatedList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiTransportManagementCarrierListGet(pageNumber, pageSize, listArchived, type, search, pickupPostalCode, deliveryPostalCode,pickupDate, deliveryDate,sortingPropertyName, sortingIsDescending, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         }, 
+
+         /**
+         * 
+         * @param {number} [pageNumber] 
+         * @param {number} [pageSize] 
+         * @param {ShipmentsStatus} [status] 
+         * @param {string} [search] 
+         * @param {string} [sortingPropertyName] 
+         * @param {boolean} [sortingIsDescending] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiCarrierOrdersListGet(pageNumber?: number, pageSize?: number, status?: ShipmentsStatus, search?: string,sortingPropertyName?: string, sortingIsDescending?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ListShipmentsDtoPaginatedList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiCarrierOrdersListGet(pageNumber, pageSize, status, search, sortingPropertyName, sortingIsDescending, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        }, 
+
+        /**
+         * 
+         * @param {string} shipmentId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiCarrierOrdersDetailsIdGet(shipmentId: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiCarrierOrdersDetailsIdGet(shipmentId, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
                 /**
          * 
          * @param {string} [transportRequestId] 
@@ -1764,6 +2206,38 @@ export const RequestsApiFp = function(configuration?: Configuration) {
                 return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
             },
 
+            
+            /**
+        * 
+        * @param {string} [transportRequestId ] 
+        * @param {SubmitOfferAdminTransportManageDto} [approveRequestDto] 
+   
+        * @param {*} [options] Override http request option.
+        * @throws {RequiredError}
+        */
+       
+            async apiAdminConfirmEvaluationPut(transportRequestId?:string,approveRequestDto?:SubmitOfferAdminTransportManageDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+                const localVarAxiosArgs = await localVarAxiosParamCreator.apiAdminConfirmEvaluationPut(transportRequestId,approveRequestDto, options);
+                return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            },
+
+
+                       /**
+        * 
+        * @param {string} [transportRequestId ] 
+        * @param {string} [transportCarrierId ] 
+   
+        * @param {*} [options] Override http request option.
+        * @throws {RequiredError}
+        */
+       
+        async apiChooseOfferPut(transportRequestId?:string,transportCarrierId?:string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiChooseOfferPut(transportRequestId,transportCarrierId, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+
+            
+
             /**
         * 
         * @param {number} [pageNumber] 
@@ -1800,6 +2274,23 @@ export const RequestsApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiTransportManagementAdminListGet(pageNumber, pageSize, search, sortingPropertyName, sortingIsDescending,status, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         }, 
+
+             /**
+             * 
+             * @param {number} [pageNumber] 
+             * @param {number} [pageSize] 
+             * @param {string} [search] 
+             * @param {string} [sortingPropertyName] 
+             * @param {boolean} [sortingIsDescending] 
+             * @param {*} [options] Override http request option.
+             * @throws {RequiredError}
+             */
+
+             async apiShipmentsListGet(pageNumber?: number, pageSize?: number, search?: string, sortingPropertyName?: string, sortingIsDescending?: boolean,status?:number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ListTransportManagementDtoPaginatedList>> {
+                const localVarAxiosArgs = await localVarAxiosParamCreator.apiShipmentsListGet(pageNumber, pageSize, search, sortingPropertyName, sortingIsDescending,status, options);
+                return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            },
+
         /**
          * 
          * @param {number} [pageNumber] 
@@ -1854,12 +2345,34 @@ export const RequestsApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {string} id 
-         * @param {ApproveRequestDto} [approveRequestDto] 
+         * @param {SubmitOfferTransportManageDto} [submitOfferTransportManageDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         async apiTransportManagementIdSubmitOfferPut(id: string, submitOfferTransportManageDto?: SubmitOfferTransportManageDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiTransportManagementIdSubmitOfferPut(id, submitOfferTransportManageDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {AssignTruckShipmentsDto} [assignTruckShipmentsDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiShipmentsIdAssignTruckPost(id: string, assignTruckShipmentsDto?: AssignTruckShipmentsDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiShipmentsIdAssignTruckPost(id, assignTruckShipmentsDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {AssignTruckShipmentsDto} [assignTruckShipmentsDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiShipmentsIdConfirmPickupDeliveryPut(id: string, assignTruckShipmentsDto?: AssignTruckShipmentsDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiShipmentsIdConfirmPickupDeliveryPut(id, assignTruckShipmentsDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -2021,7 +2534,7 @@ export const RequestsApiFp = function(configuration?: Configuration) {
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
 
-          /**
+        /**
          * 
          * @param {string} [questionnaireListJson] 
          * @param {*} [options] Override http request option.
@@ -2031,6 +2544,18 @@ export const RequestsApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiVehicleFleetRequestsPost(questionnaireListJson, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+
+        /**
+         * 
+         * @param {string} [shipmentId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+          async apiShipmentsUploadIdPost(shipmentId?: string, files?: File[], options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiShipmentsUploadIdPost(shipmentId,files, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+
     }
 };
 
@@ -2352,6 +2877,36 @@ export interface TransportManagementApiCarrierListGetRequest{
      */
     readonly search?: string
 
+    
+    /**
+     * 
+     * @type {string}
+     * @memberof TransportManagementApiCarrierListGet
+     */
+    readonly pickupPostalCode?: string
+
+        
+    /**
+     * 
+     * @type {string}
+     * @memberof TransportManagementApiCarrierListGet
+     */
+    readonly deliveryPostalCode?: string
+        
+    /**
+     * 
+     * @type {string}
+     * @memberof TransportManagementApiCarrierListGet
+     */
+    readonly pickupDate?: string
+
+        
+    /**
+     * 
+     * @type {string}
+     * @memberof TransportManagementApiCarrierListGet
+     */
+    readonly deliveryDate?: string
     /**
      * 
      * @type {string}
@@ -2367,6 +2922,63 @@ export interface TransportManagementApiCarrierListGetRequest{
     readonly sortingIsDescending?: boolean
 }
 
+/**
+ * Request parameters for apiRequestsGet operation in RequestsApi.
+ * @export
+ * @interface ShipmentsApiCarrierListGetRequest
+ */
+export interface ShipmentsApiCarrierListGetRequest{
+    /**
+     * 
+     * @type {number}
+     * @memberof ShipmentsApiCarrierListGet
+     */
+    readonly pageNumber?: number
+
+    /**
+     * 
+     * @type {number}
+     * @memberof TransportManagementApiCarrierListGet
+     */
+    readonly pageSize?: number
+
+    /**
+     * 
+     * @type {ShipmentsStatus}
+     * @memberof TransportManagementApiCarrierListGet
+     */
+     readonly status?: ShipmentsStatus
+
+
+    // /**
+    //  * 
+    //  * @type {TransportRequestStatus}
+    //  * @memberof TransportManagementApiCarrierListGet
+    //  */
+    // readonly type?: TransportRequestStatus
+
+
+    /**
+     * 
+     * @type {string}
+     * @memberof TransportManagementApiCarrierListGet
+     */
+    readonly search?: string
+
+    /**
+     * 
+     * @type {string}
+     * @memberof TransportManagementApiCarrierListGet
+     */
+    readonly sortingPropertyName?: string
+
+    /**
+     * 
+     * @type {boolean}
+     * @memberof TransportManagementApiCarrierListGet
+     */
+    readonly sortingIsDescending?: boolean
+}
 /**
  * Request parameters for apiRequestsGet operation in RequestsApi.
  * @export
@@ -2393,7 +3005,13 @@ export interface TransportManagementApiInvitedListGetRequest{
      * @memberof TransportManagementApiInvitedListGet
      */
     readonly pageSize?: number
-
+    
+    /**
+     * 
+     * @type {string}
+     * @memberof TransportManagementApiInvitedListGet
+     */
+    readonly search?: string
     /**
      * 
      * @type {VehicleFleetRequestStatus}
@@ -2401,12 +3019,6 @@ export interface TransportManagementApiInvitedListGetRequest{
      */
      readonly status?: VehicleFleetRequestStatus
 
-    /**
-     * 
-     * @type {string}
-     * @memberof TransportManagementApiInvitedListGet
-     */
-    readonly search?: string
 
     /**
      * 
@@ -2466,6 +3078,27 @@ export interface TransportManagementIdSubmitOfferPutRequest {
     readonly submitOfferTransportManageDto?: SubmitOfferTransportManageDto
 }
 
+/**
+ * Request parameters for apiRequestsIdApprovePut operation in RequestsApi.
+ * @export
+ * @interface ShipmentsIdAssignTruckPostRequest
+ */
+export interface ShipmentsIdAssignTruckPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ShipmentsIdAssignTruckPost
+     */
+    readonly shipmentId: string
+
+    /**
+     * 
+     * @type {AssignTruckShipmentsDto}
+     * @memberof ShipmentsIdAssignTruckPost
+     */
+    readonly assignTruckShipmentsDto?: AssignTruckShipmentsDto
+}
+
 export interface TransportManagementIdSubmitAdminOfferPutRequest {
     /**
      * 
@@ -2480,6 +3113,22 @@ export interface TransportManagementIdSubmitAdminOfferPutRequest {
      * @memberof TransportManagementIdSubmitAdminOfferPut
      */
     readonly submitOfferTransportManageDto?: SubmitOfferAdminTransportManageDto
+}
+
+
+export interface TransportManagementIdChooseOfferPutRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof TransportManagementIdChooseOfferPutRequest
+     */
+    readonly transportRequestId?: string
+    /**
+     * 
+     * @type {string}
+     * @memberof TransportManagementIdChooseOfferPutRequest
+     */
+    readonly transportCarrierId?: string
 }
 
 
@@ -2830,6 +3479,31 @@ export interface RequestsApiApiVehicleFleetRequestsPostRequest {
 
 }
 
+
+/**
+ * Request parameters for apiRequestsPost operation in RequestsApi.
+ * @export
+ * @interface RequestsApiApiShipmentsUploadIdPostRequest
+ */
+
+export interface RequestsApiApiShipmentsUploadIdPostRequest {
+   
+    /**
+     * 
+     * @type {any}
+     * @memberof RequestsApiApiShipmentsUploadIdPostRequest
+     */
+    readonly shipmentId?: any
+
+    /**
+     * 
+     * @type {any}
+     * @memberof RequestsApiApiShipmentsUploadIdPostRequest
+     */
+    readonly files?: File[];
+
+}
+
 /**
  * RequestsApi - object-oriented interface
  * @export
@@ -2898,9 +3572,30 @@ export class RequestsApi extends BaseAPI {
      * @memberof RequestsApi
      */
     public apiTransportManagementCarrierListGet(requestParameters: TransportManagementApiCarrierListGetRequest = {}, options?: AxiosRequestConfig) {
-        return RequestsApiFp(this.configuration).apiTransportManagementCarrierListGet(requestParameters.pageNumber, requestParameters.pageSize, requestParameters.listArchived, requestParameters.type, requestParameters.search, requestParameters.sortingPropertyName, requestParameters.sortingIsDescending, options).then((request) => request(this.axios, this.basePath));
+        return RequestsApiFp(this.configuration).apiTransportManagementCarrierListGet(requestParameters.pageNumber, requestParameters.pageSize, requestParameters.listArchived, requestParameters.type, requestParameters.search, requestParameters.pickupPostalCode,requestParameters.deliveryPostalCode,requestParameters.pickupDate,requestParameters.deliveryDate,requestParameters.sortingPropertyName, requestParameters.sortingIsDescending, options).then((request) => request(this.axios, this.basePath));
     }
 
+    /**
+     * 
+     * @param {ShipmentsApiCarrierListGetRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RequestsApi
+     */
+    public apiCarrierOrdersListGet(requestParameters: ShipmentsApiCarrierListGetRequest = {}, options?: AxiosRequestConfig) {
+        return RequestsApiFp(this.configuration).apiCarrierOrdersListGet(requestParameters.pageNumber, requestParameters.pageSize, requestParameters.status, requestParameters.search, requestParameters.sortingPropertyName, requestParameters.sortingIsDescending, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ShipmentsIdAssignTruckPostRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RequestsApi
+     */
+    public apiCarrierOrdersDetailsIdGet(requestParameters: ShipmentsIdAssignTruckPostRequest, options?: AxiosRequestConfig) {
+        return RequestsApiFp(this.configuration).apiCarrierOrdersDetailsIdGet(requestParameters.shipmentId, options).then((request) => request(this.axios, this.basePath));
+    }
     
     /**
      * 
@@ -2948,6 +3643,31 @@ export class RequestsApi extends BaseAPI {
     public apiAdminApprovedOfferPut(requestParameters: TransportManagementIdSubmitAdminOfferPutRequest = {}, options?: AxiosRequestConfig) {
         return RequestsApiFp(this.configuration).apiAdminApprovedOfferPut(requestParameters.transportRequestId, requestParameters.submitOfferTransportManageDto, options).then((request) => request(this.axios, this.basePath));
     }
+
+        /**
+     * 
+     * @param {TransportManagementIdSubmitAdminOfferPutRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RequestsApi
+     */
+
+        public apiAdminConfirmEvaluationPut(requestParameters: TransportManagementIdSubmitAdminOfferPutRequest = {}, options?: AxiosRequestConfig) {
+            return RequestsApiFp(this.configuration).apiAdminConfirmEvaluationPut(requestParameters.transportRequestId, requestParameters.submitOfferTransportManageDto, options).then((request) => request(this.axios, this.basePath));
+        }
+
+
+       /**
+     * 
+     * @param {TransportManagementIdChooseOfferPutRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RequestsApi
+     */
+
+       public apiChooseOfferPut(requestParameters: TransportManagementIdChooseOfferPutRequest = {}, options?: AxiosRequestConfig) {
+        return RequestsApiFp(this.configuration).apiChooseOfferPut(requestParameters.transportRequestId, requestParameters.transportCarrierId, options).then((request) => request(this.axios, this.basePath));
+    }
     
     /**
      * 
@@ -2972,6 +3692,19 @@ export class RequestsApi extends BaseAPI {
     public apiTransportManagementAdminListGet(requestParameters: TransportManagementApiCarrierListGetRequest = {}, options?: AxiosRequestConfig) {
         return RequestsApiFp(this.configuration).apiTransportManagementAdminListGet(requestParameters.pageNumber, requestParameters.pageSize, requestParameters.search, requestParameters.sortingPropertyName, requestParameters.sortingIsDescending,requestParameters.status, options).then((request) => request(this.axios, this.basePath));
     }
+
+        /**
+     * 
+     * @param {TransportManagementIdSubmitOfferPutRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RequestsApi
+     */
+
+        public apiShipmentsListGet(requestParameters: TransportManagementApiCarrierListGetRequest = {}, options?: AxiosRequestConfig) {
+            return RequestsApiFp(this.configuration).apiShipmentsListGet(requestParameters.pageNumber, requestParameters.pageSize, requestParameters.search, requestParameters.sortingPropertyName, requestParameters.sortingIsDescending,requestParameters.status, options).then((request) => request(this.axios, this.basePath));
+        }
+
 
 
         /**
@@ -3014,6 +3747,26 @@ export class RequestsApi extends BaseAPI {
      */
     public apiTransportManagementIdSubmitOfferPut(requestParameters: TransportManagementIdSubmitOfferPutRequest, options?: AxiosRequestConfig) {
         return RequestsApiFp(this.configuration).apiTransportManagementIdSubmitOfferPut(requestParameters.transportRequestId, requestParameters.submitOfferTransportManageDto, options).then((request) => request(this.axios, this.basePath));
+    }
+    /**
+     * 
+     * @param {ShipmentsIdAssignTruckPostRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RequestsApi
+     */
+    public apiShipmentsIdAssignTruckPost(requestParameters: ShipmentsIdAssignTruckPostRequest, options?: AxiosRequestConfig) {
+        return RequestsApiFp(this.configuration).apiShipmentsIdAssignTruckPost(requestParameters.shipmentId, requestParameters.assignTruckShipmentsDto, options).then((request) => request(this.axios, this.basePath));
+    }
+    /**
+     * 
+     * @param {ShipmentsIdAssignTruckPostRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RequestsApi
+     */
+    public apiShipmentsIdConfirmPickupDeliveryPut(requestParameters: ShipmentsIdAssignTruckPostRequest, options?: AxiosRequestConfig) {
+        return RequestsApiFp(this.configuration).apiShipmentsIdConfirmPickupDeliveryPut(requestParameters.shipmentId, requestParameters.assignTruckShipmentsDto, options).then((request) => request(this.axios, this.basePath));
     }
     /**
      * 
@@ -3150,4 +3903,16 @@ export class RequestsApi extends BaseAPI {
     public apiVehicleFleetRequestsPost(requestParameters: RequestsApiApiVehicleFleetRequestsPostRequest = {}, options?: AxiosRequestConfig) {
         return RequestsApiFp(this.configuration).apiVehicleFleetRequestsPost(requestParameters.questionnaireListJson, options).then((request) => request(this.axios, this.basePath));
     }
+
+    /**
+     * 
+     * @param {RequestsApiApiShipmentsUploadIdPostRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RequestsApi
+     */
+    public apiShipmentsUploadIdPost(requestParameters: RequestsApiApiShipmentsUploadIdPostRequest = {}, options?: AxiosRequestConfig) {
+        return RequestsApiFp(this.configuration).apiShipmentsUploadIdPost(requestParameters.shipmentId,requestParameters.files, options).then((request) => request(this.axios, this.basePath));
+    }
+    
 }

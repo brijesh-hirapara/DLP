@@ -8,7 +8,7 @@ namespace DLP.Domain.Enums
         Active = 1,
         [Description("Under Evaluation")]
         UnderEvaluation = 2,
-        [Description("Completed")]
+        [Description("In Shipment")]
         Completed = 3,
         [Description("Cancelled")]
         Cancelled = 4,

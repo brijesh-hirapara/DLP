@@ -11,6 +11,7 @@ using DLP.Domain.Enums;
 using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using static DLP.Application.Common.Auth.CustomPolicies;
 
 namespace DLP.Application.TransportManagemen.Queries
 {
@@ -85,11 +86,14 @@ namespace DLP.Application.TransportManagemen.Queries
 
                 if (!string.IsNullOrEmpty(request.Search))
                 {
-                    string search = request.Search.Trim().ToLower();
-                    carriers = carriers.Where(x =>
-                        x.Organization.Name.ToLower().Contains(search)
-                    );
+                    string search = request.Search.Replace(" ", "");
+                    carriers = carriers.Where(r =>
+                     r.Organization.Name.Contains(search)
+                 );
                 }
+
+
+
 
                 OrdinalPaginatedList<TransportCarrierListDto> response;
 

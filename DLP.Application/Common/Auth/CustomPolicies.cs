@@ -121,6 +121,7 @@ public static class CustomPolicies
     public static class Shipments
     {
         public static readonly Policy List = new("shipments:list", "Shipments");
+        public static readonly Policy ViewDetails = new("shipments:view-details", "View Shipments Details");
     }
 
 
@@ -400,6 +401,9 @@ public static class CustomPolicies
         public static readonly Policy ViewDetails = new("manage-transport-requests:view-details", "View Manage Transport Requests");
         public static readonly Policy Add = new("manage-transport-requests:add", "Add Manage Transport Requests");
         public static readonly Policy OfferList = new("manage-transport-offers:list", "List Manage Transport Offers");
+        public static readonly Policy InvitedCarriersList = new ("invited-carriers:list", "List Invited Carriers");
+        public static readonly Policy InvitedCarrierAdd = new ("invited-carrier:add", "Add Invited Carrier");
+        public static readonly Policy InvitedCarrierDelete = new ("invited-carrier:delete", "Delete Invited Carrier");
     }
 
     // Languages Module

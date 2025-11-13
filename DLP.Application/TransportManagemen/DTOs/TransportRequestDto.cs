@@ -23,6 +23,7 @@ namespace DLP.Application.TransportManagemen.DTOs
         public string LowestPrice { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsTemplate { get; set; }
+        public bool IsForYourAction { get; set; }
         public string? TemplateName { get; set; }
         public string? CurrencyName { get; set; }
         public List<TransportPickupDto> TransportPickup { get; set; } = new List<TransportPickupDto>();
@@ -40,10 +41,15 @@ namespace DLP.Application.TransportManagemen.DTOs
                 .Map(dest => dest.ShipperName, src => src.Organization.Name)
                 .Map(dest => dest.CurrencyName, src => src.TransportInformation != null &&
                                    src.TransportInformation.Any(ti => ti.Currency != null) ? src.TransportInformation.First().Currency.Name : null)
-                .Map(dest => dest.OfferCount, src => src.TransportCarrier.Count(ti => !ti.IsDeleted && ti.IsAdminApproved && ti.Status == TransportCarrierStatus.Accepted))
-                .Map(dest => dest.AdminOfferCount, src => src.TransportCarrier.Count(ti => !ti.IsDeleted && !ti.IsAdminApproved && ti.Status == TransportCarrierStatus.Accepted))
-                .Map(dest => dest.CarrierCount, src => src.TransportCarrier.Count())
-                .Map(dest => dest.LowestPrice, src => src.TransportCarrier != null ? src.TransportCarrier.Where(ti => ti.Status == TransportCarrierStatus.Accepted && ti.IsAdminApproved && ti.AdminApprovedPrice > 0)
+                .Map(dest => dest.OfferCount, src => src.TransportCarrier.Count(ti => !ti.IsDeleted && ti.IsAdminApproved))
+                .Map(dest => dest.AdminOfferCount, src => src.TransportCarrier.Count(ti => !ti.IsDeleted && ti.Status == TransportCarrierStatus.Accepted))
+                .Map(dest => dest.CarrierCount, src => src.TransportCarrier.Where(x=>!x.IsDeleted).Count())
+                .Map(dest => dest.IsForYourAction, src => src.TransportCarrier
+                                                     .Count(x => !x.IsDeleted
+                                                              && x.Status == TransportCarrierStatus.Accepted
+                                                              && x.IsAdminApproved
+                                                              && x.IsShipperBook) > 0)
+                .Map(dest => dest.LowestPrice, src => src.TransportCarrier != null ? src.TransportCarrier.Where(ti => ti.IsAdminApproved && ti.AdminApprovedPrice > 0)
                                                                                                          .OrderBy(ti => ti.AdminApprovedPrice)
                                                                                                          .Select(ti => ti.AdminApprovedPrice != null ? $"{ti.AdminApprovedPrice.Value.ToString("0.##")}" : null)
                                                                                                          .FirstOrDefault() ?? "0.00" : "0.00");

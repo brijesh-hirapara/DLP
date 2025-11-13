@@ -15,6 +15,7 @@ import locale from 'antd/lib/locale/en_US';
 import { Suspense, useEffect } from "react";
 import { getLogoImage } from "api/common";
 
+
 const { theme, topMenu, darkMode, rtl } = config;
 const App = () => {
   useEffect(() => {

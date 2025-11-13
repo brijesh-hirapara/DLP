@@ -1,5 +1,6 @@
 ﻿using DLP.Application.ActivityLogs.Dto;
 using DLP.Application.Common.Interfaces;
+using DLP.Application.Common.Templates.Models;
 using DLP.Domain.Entities;
 using DLP.Domain.Enums;
 using MediatR;
@@ -120,6 +121,13 @@ namespace DLP.Application.TransportManagemen.Commands
                     });
                     await _dbContext.SaveChangesAsync(cancellationToken);
                 }
+
+                var carrierOfferObj = new CarrierOfferResultEmailViewModel();
+                carrierOfferObj.EvaluationResult = "Submited";
+                carrierOfferObj.RequestId = transportCarriers.TransportRequest.RequestId;
+
+
+                await _emailCommunicationService.SendSubmitedOfferToSuperAdminEmail(carrierOfferObj, cancellationToken);
 
                 return Unit.Value;
             }

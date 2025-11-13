@@ -82,7 +82,7 @@ namespace DLP.Application.TransportManagemen.Queries
                         .ThenInclude(tr => tr.TransportInformation)
                             .ThenInclude(tr => tr.Currency)
                     .Where(x => !x.IsDeleted &&
-                                x.TransportRequestId == transportRequestGuid && x.IsAdminApproved && x.Status == TransportCarrierStatus.Accepted)   // ✅ Filter added
+                                x.TransportRequestId == transportRequestGuid && (x.IsAdminApproved  || x.IsShipperBook))   // ✅ Filter added
                     .AsQueryable();
 
 

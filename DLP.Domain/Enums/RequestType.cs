@@ -7,7 +7,8 @@ namespace DLP.Domain.Enums;
 /// </summary>
 public enum RequestType
 {
-    [Description("Register as Shipper")]
+    //[Description("Register as Shipper")]
+    [Description("Register as Purchaser")]
     RegistraterAsShipper = 1,
     [Description("Register as Carrier")]
     RegistraterAsCarrier = 2,

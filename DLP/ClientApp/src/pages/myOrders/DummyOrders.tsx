@@ -1,6 +1,8 @@
 export const StaticShipments = [
   {
     id: 23,
+    distance: "1300",
+    weight: "590",
     price: "200",
     currency: "EUR",
     status: "PICKUP CONFIRMED",
@@ -15,6 +17,8 @@ export const StaticShipments = [
   },
   {
     id: 24,
+    distance: "1950",
+    weight: "420",
     price: "260",
     currency: "EUR",
     status: "TRUCK ASSIGNED",
@@ -29,6 +33,8 @@ export const StaticShipments = [
   },
   {
     id: 25,
+    distance: "2200",
+    weight: "370",
     price: "300",
     currency: "EUR",
     status: "POD CONFIRMED",
@@ -43,6 +49,8 @@ export const StaticShipments = [
   },
   {
     id: 26,
+    distance: "1400",
+    weight: "170",
     price: "320",
     currency: "EUR",
     status: "DRIVER BOOKED",
@@ -57,9 +65,11 @@ export const StaticShipments = [
   },
   {
     id: 27,
+    distance: "900",
+    weight: "440",
     price: "190",
     currency: "EUR",
-    status: "POD CONFIRMED",
+    status: "POD NOT CONFIRMED",
     statusColor: "#23c480",
     statusBg: "#daf7ea",
 //     button: "POD CONFIRMED",
@@ -71,6 +81,8 @@ export const StaticShipments = [
   },
   {
     id: 28,
+    distance: "1200",
+    weight: "340",
     price: "400",
     currency: "EUR",
     status: "DELIVERY CONFIRMED",

@@ -77,7 +77,7 @@ namespace DLP.Application.Users.Commands
                     user.MunicipalityId = request.MunicipalityId.Value;
 
                 user.Comments = request.Comments;
-                user.OrganizationId = request.OrganizationId;
+                user.OrganizationId = request.OrganizationId ?? _currentUserService.OrganizationId;
                 user.PersonalNumber = request.PersonalNumber;
                 user.PhoneNumber = request.PhoneNumber;
                 user.UpdatedAt = DateTime.UtcNow;

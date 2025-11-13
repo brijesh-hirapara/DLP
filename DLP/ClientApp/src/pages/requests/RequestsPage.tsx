@@ -30,6 +30,9 @@ import FeatherIcon from "feather-icons-react";
 import { ExportButtonPageApiHeader } from "components/buttons/export-button/export-button-api";
 import { ProjectSorting } from "pages/localization/email/style";
 import { AutoComplete } from "components/autoComplete/autoComplete";
+import startOfferConnection from "./RequestSignalRService";
+import { HubConnection } from "@microsoft/signalr";
+import startConnection from "./RequestSignalRService";
 
 
 const requestsApi = new RequestsApi();
@@ -77,7 +80,7 @@ export const RequestsPage = () => {
     ].filter(Boolean)
   : [
       { id: RequestTypeNew.ALL, name: t("global.all", "All") },
-      { id: RequestTypeNew.RegistraterAsShipper, name: t("company.shipper", "Shipper") },
+      { id: RequestTypeNew.RegistraterAsShipper, name: t("company.purchaser", "Purchaser") },
       { id: RequestTypeNew.RegistraterAsCarrier, name: t("company.carrier", "Carrier") },
     ].filter(Boolean);
 
@@ -102,9 +105,10 @@ export const RequestsPage = () => {
     setQuery((prevQuery) => ({ ...prevQuery, pageNumber, pageSize }));
   };
 
+
+
   const fetchRequests = async () => {
     try {
-    
       setRequestsLoading(true);
       const response = await requestsApi.apiRequestsGet({
         ...query,
@@ -229,7 +233,7 @@ export const RequestsPage = () => {
       name,
       municipality,
       requestType: t(
-        `requests:request-type-${requestType}`,
+        `requests:request-type-desc-${requestType}`,
         requestTypeDesc as string
       ),
       createdAt: moment(createdAt).format("MM.DD.yyyy"),

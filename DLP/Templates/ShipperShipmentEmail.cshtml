@@ -1,0 +1,43 @@
+﻿@model DLP.Application.Common.Templates.Models.CarrierOfferResultEmailViewModel
+@using DLP.HtmlHelpers;
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>
+        @await Html.Translate("shipper-shipment-pod-confirmed:email-subject", "Shipment POD Confirmed", Model.UserLang)
+    </title>
+</head>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+
+    <p>
+        @await Html.Translate("shipper-shipment-pod-confirmed:greeting", "Dear", Model.UserLang) @Model.FullName,
+    </p>
+
+    <p>
+        @await Html.Translate("shipper-shipment-pod-confirmed:intro", "We are pleased to inform you that the Proof of Delivery (POD) has been successfully confirmed for your shipment request", Model.UserLang)
+        <strong>@Model.RequestId</strong>.
+    </p>
+
+    <p>
+        @await Html.Translate("shipper-shipment-pod-confirmed:status", "The shipment has been marked as completed in the system.", Model.UserLang)
+    </p>
+
+    <p>
+        @await Html.Translate("shipper-shipment-pod-confirmed:note", "Thank you for your cooperation and timely confirmation.", Model.UserLang)
+    </p>
+
+    <p>
+        @await Html.Translate("shipper-shipment-pod-confirmed:closing", "We appreciate your continued trust in our logistics services.", Model.UserLang)
+    </p>
+
+    <p>
+        @await Html.Translate("shipper-shipment-pod-confirmed:thank", "Thank you and have a great day!", Model.UserLang)
+    </p>
+
+    <p>
+        @await Html.Translate("shipper-shipment-pod-confirmed:regards", "Best Regards,", Model.UserLang)<br />
+        TransiGo Logistics Platform
+    </p>
+</body>
+</html>

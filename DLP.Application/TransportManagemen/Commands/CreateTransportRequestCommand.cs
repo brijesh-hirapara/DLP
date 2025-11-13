@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using DLP.Application.ActivityLogs.Dto;
-using DLP.Application.Common.Attributes;
+﻿using DLP.Application.ActivityLogs.Dto;
 using DLP.Application.Common.Constants;
 using DLP.Application.Common.Interfaces;
 using DLP.Application.Common.Templates.Models;
@@ -11,8 +9,6 @@ using Hangfire;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Org.BouncyCastle.Asn1.Ocsp;
-using static DLP.Application.Common.Auth.CustomPolicies;
 
 namespace DLP.Application.TransportManagemen.Commands;
 
@@ -87,13 +83,81 @@ public class CreateTransportRequestCommandHandler : IRequestHandler<CreateTransp
                     throw new ApplicationException($"Template already exists: {command.TemplateName}");
             }
 
-            var transportCarrier = await _dbContext.Organizations
-                                 .Where(x => x.Type == OrganizationTypeEnum.CARRIER && !x.IsDeleted)
-                                 .Select(x => new TransportCarrierDto
-                                 {
-                                     OrganizationId = x.Id
-                                 })
-                                 .ToListAsync();
+            //var transportCarrier = await _dbContext.Organizations
+            //                     .Where(x => x.Type == OrganizationTypeEnum.CARRIER && !x.IsDeleted)
+            //                     .Select(x => new TransportCarrierDto
+            //                     {
+            //                         OrganizationId = x.Id
+            //                     })
+            //                     .ToListAsync();
+
+
+
+            //var vehicleFleetRequestsIds = await _dbContext.Questionnaire
+            //    .Where(x => x.RequestType == "RegistraterAsCarrier"
+            //    && x.ModuleName == "VehicleFleetRequest"
+            //    && x.QuestionNo == 5
+            //    // && (x.CodebookId == command.TransportPickup.CountryId || x.CodebookId == command.TransportDelivery.CountryId)
+            //    )
+            //   .Select(x => x.RequestId).ToListAsync();
+
+            //var transportCarrier = await _dbContext.VehicleFleetRequests
+            //    .Include(o => o.Organization)
+            //    .Where(x => x.Status == (int)VehicleFleetRequestStatus.Confirmed
+            //    && vehicleFleetRequestsIds.Contains(x.Id.ToString())
+            //    && x.Organization.Type == OrganizationTypeEnum.CARRIER && !x.IsDeleted && !x.Organization.IsDeleted)
+            //    .Select(x => new TransportCarrierDto
+            //    {
+            //        OrganizationId = x.OrganizationId.Value,
+            //        TaxNumber = x.Organization.TaxNumber,
+            //    })
+            //    .Distinct()
+            //    .ToListAsync();
+
+            // Step 1: Get confirmed vehicle fleet request IDs
+            var vehicleFleetRequestsIds = await _dbContext.VehicleFleetRequests
+                .Where(x => x.Status == (int)VehicleFleetRequestStatus.Confirmed)
+                .Select(x => x.Id)
+                .ToListAsync(cancellationToken);
+
+            // Step 2: Get all approved carrier registration requests by pickup country
+            //var requestList = await _dbContext.Requests
+            //    .Where(x =>
+            //        (x.CountryId == command.TransportPickup.CountryId ||
+            //         x.CountryId == command.TransportPickup.CountryId) && // ✅ redundant condition, can simplify later
+            //        x.Type == RequestType.RegistraterAsCarrier &&
+            //        x.Status == RequestStatus.Approved)
+            //    .Select(x => x.IdNumber)
+            //    .ToListAsync(cancellationToken);
+
+            // Step 3: Get list of carrier organization IDs
+            var carrierOrganizationIds = await _dbContext.Organizations
+                .Where(x =>
+                    x.Type == OrganizationTypeEnum.CARRIER &&
+                    !x.IsDeleted &&
+                    (x.CountryId == command.TransportPickup.CountryId ||
+                     x.CountryId == command.TransportPickup.CountryId))
+                .Select(x => x.Id)
+                .ToListAsync(cancellationToken);
+
+            // Step 4: Get valid transport carriers linked to those organizations and confirmed fleet requests
+            var transportCarriers = await _dbContext.VehicleFleetRequests
+                .Include(o => o.Organization)
+                .Where(x =>
+                    x.Status == (int)VehicleFleetRequestStatus.Confirmed &&
+                    vehicleFleetRequestsIds.Contains(x.Id) && // ✅ Id is int or long, no need ToString()
+                    carrierOrganizationIds.Contains(x.OrganizationId.Value) &&
+                    x.Organization.Type == OrganizationTypeEnum.CARRIER &&
+                    !x.IsDeleted &&
+                    !x.Organization.IsDeleted)
+                .Select(x => new TransportCarrierDto
+                {
+                    OrganizationId = x.OrganizationId.Value,
+                })
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+
 
 
             //var pickup = command.TransportPickup;
@@ -123,7 +187,7 @@ public class CreateTransportRequestCommandHandler : IRequestHandler<CreateTransp
                 TransportDelivery = await AddTransportDelivery(command.TransportDelivery, cancellationToken),
                 TransportGoods = await AddTransportGoods(command.TransportGoods, cancellationToken),
                 TransportInformation = await AddTransportInformation(command.TransportInformation, cancellationToken),
-                TransportCarrier = await AddTransportCarrier(transportCarrier, cancellationToken),
+                TransportCarrier = await AddTransportCarrier(transportCarriers, cancellationToken),
                 Status = TransportRequestStatus.Active,
                 OrganizationId = _currentUser.OrganizationId,
                 CreatedAt = DateTime.UtcNow,
@@ -144,7 +208,7 @@ public class CreateTransportRequestCommandHandler : IRequestHandler<CreateTransp
                     TransportDelivery = await AddTransportDelivery(command.TransportDelivery, cancellationToken),
                     TransportGoods = await AddTransportGoods(command.TransportGoods, cancellationToken),
                     TransportInformation = await AddTransportInformation(command.TransportInformation, cancellationToken),
-                    TransportCarrier = await AddTransportCarrier(transportCarrier, cancellationToken),
+                    TransportCarrier = await AddTransportCarrier(transportCarriers, cancellationToken),
                     OrganizationId = _currentUser.OrganizationId,
                     TemplateName = command.TemplateName,
                     Status = TransportRequestStatus.Active,

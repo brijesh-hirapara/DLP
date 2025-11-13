@@ -1,40 +1,28 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Row, Col, Button, Progress, Pagination } from "antd";
+import { Row, Col, Button, Progress, Pagination, Popconfirm, Tooltip } from "antd";
 import { PageHeader } from "components/page-headers/page-headers";
-import { AutoComplete } from "components/autoComplete/autoComplete";
-import { ProjectSorting } from "pages/localization/email/style";
-import { OfferCardStyled, CardToolbox } from "container/styled";
-import { UserCard } from "pages/style";
+import { OfferCardStyled, CardToolbox, Main } from "container/styled";
 import FeatherIcon from 'feather-icons-react';
-import { ExportButtonPageApiHeader } from "components/buttons/export-button/export-button-api";
 import { RequestsApi } from "api/api";
-import { useParams } from "react-router-dom";
-import { formatDate2 } from "api/common";
+import { useNavigate, useParams } from "react-router-dom";
+import { convertUTCToLocal, formatDate2 } from "api/common";
+import openNotificationWithIcon from "utility/notification";
+import { CountdownTimerForExpire } from "utility/CountdownTimer/CountdownTimer";
+import dayjs from "dayjs";
+import startConnection from "pages/requests/RequestSignalRService";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const requestsApi = new RequestsApi();
-
-const offers = [
-  { id: 1, price: 120, currency: "EUR", number: "Offer No.01", pickup: "05.07.2025", delivery: "15.08.2025", loadTime: "4 Days", expiredTime: "1h 15m 30sec", progress: 60 },
-  { id: 2, price: 150, currency: "EUR", number: "Offer No.02", pickup: "05.07.2025", delivery: "15.08.2025", loadTime: "2 Days", expiredTime: "2h 15m 30sec", progress: 40 },
-  { id: 3, price: 180, currency: "EUR", number: "Offer No.03", pickup: "05.07.2025", delivery: "15.08.2025", loadTime: "3 Days", expiredTime: "00h 15m 30sec", progress: 90 },
-  { id: 4, price: 200, currency: "EUR", number: "Offer No.04", pickup: "05.07.2025", delivery: "15.08.2025", loadTime: "1 Day", expiredTime: "1h 45m 20sec", progress: 20, warning: "The proposed schedule slightly differs from the originally requested delivery." },
-  { id: 5, price: 220, currency: "EUR", number: "Offer No.05", pickup: "05.07.2025", delivery: "15.08.2025", loadTime: "4 Days", expired: true, progress: 100 },
-  { id: 6, price: 280, currency: "EUR", number: "Offer No.06", pickup: "05.07.2025", delivery: "15.08.2025", loadTime: "5 Days", expiredTime: "00h 45m 10sec", progress: 70 },
-];
 
 function ListChooseOfferPage() {
 
   const { t } = useTranslation();
   const [chooseOfferData, setChooseOfferData] = useState();
-  const searchTimeout = useRef();
   const params = useParams();
-  
-
-  // const [pageData, setPageData] = useState({
-  //   pageIndex: 1,
-  //   pageSize: 10,
-  // });
+  const [connection, setConnection] = useState(null);
+  const navigate = useNavigate();
 
   const [query, setQuery] = useState({
     search: "",
@@ -44,16 +32,6 @@ function ListChooseOfferPage() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const totalOffers = offers.length;
-  // const startIndex = (pageData.pageIndex - 1) * pageData.pageSize;
-
-  const onSearchChange = (value) => {
-    clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => {
-      setQuery({ ...query, pageNumber: 1, search: value });
-    }, 300);
-  };
-
   const onPaginationChange = (pageNumber) => {
     setQuery((prevQuery) => ({ ...prevQuery, pageNumber }));
   };
@@ -62,16 +40,74 @@ function ListChooseOfferPage() {
     setQuery((prevQuery) => ({ ...prevQuery, pageNumber, pageSize }));
   };
 
-  
+  const isExpired = (date) => {
+    if (!date) return true; // treat missing date as expired
+    const currentDate = convertUTCToLocal(date)
+    console.log(currentDate, "currentDate");
+    const targetTime = new Date(currentDate).getTime();
+    const now = new Date().getTime();
+    return now > targetTime; // true means expired
+  };
+
+  const getDaysBetween = (startDate, endDate) => {
+    if (!startDate || !endDate) return 0; // return 0 if either date is missing
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // check for invalid date
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+
+    const diffInMs = end.getTime() - start.getTime();
+    return Math.floor(diffInMs / (1000 * 60 * 60 * 24)); // full days difference
+  };
+
+  const getExpiryProgressPercent = (expiryDateTime, totalDurationMinutes = 360) => {
+    const currentDate = convertUTCToLocal(expiryDateTime)
+    const end = dayjs(currentDate);
+    const now = dayjs();
+
+    if (!end.isValid()) return 0;
+    if (now.isAfter(end)) return 100;
+
+    const remaining = end.diff(now, "minute");
+    const percentElapsed = ((totalDurationMinutes - remaining) / totalDurationMinutes) * 100;
+
+    return Math.min(Math.max(percentElapsed, 0), 100);
+  };
+
   useEffect(() => {
     fetchOffers();
-  }, [query,params.id]);
+  }, [query, params.id]);
+
+  // Signal R code Start
+  useEffect(() => {
+    initializeSignalR();
+
+    return () => {
+      if (connection) {
+        connection.stop();
+      }
+    };
+  }, []);
+
+  const initializeSignalR = async () => {
+    const connection = await startConnection(onReceiveBid);
+    setConnection(connection);
+  };
+
+  const onReceiveBid = async (id, price) => {
+    // Handle the received bid data
+    await fetchOffers();
+  };
+
+  // Signal R code End
 
   const fetchOffers = async () => {
     try {
       setIsLoading(true);
       const response = await requestsApi.apiChooseOfferGet({
-        ...query,idNumber:params.id,
+        ...query, idNumber: params.id,
       });
       setChooseOfferData(response.data);
     } catch (err) {
@@ -81,78 +117,90 @@ function ListChooseOfferPage() {
     }
   };
 
-  
+  const handleSubmit = async (offer) => {
+    setIsLoading(true);
+    try {
+      const response = await requestsApi.apiChooseOfferPut(
+        { transportRequestId: params.id, transportCarrierId: offer.id }
+      );
+      if (response.status === 200) {
+        openNotificationWithIcon(
+          "success",
+          t("requests:success-offer-approval", "Offer approved successfully")
+        );
+        navigate("/my-requests");
+
+      }
+      fetchOffers();
+    } catch (error) {
+      console.error("Submit Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async (offerId) => {
+    const cardElement = document.getElementById(`offer-card-${offerId}`);
+    if (!cardElement) return;
+
+    try {
+      const canvas = await html2canvas(cardElement, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Offer_${offerId}.pdf`);
+    } catch (err) {
+      console.error("PDF Download Error:", err);
+    }
+  };
+
+
   return (
     <>
-            <CardToolbox>
-              <PageHeader
-                ghost
-                title={t("choose-offer.title","Choose Offer")}
-                subTitle={
-                  <>
-                    {chooseOfferData?.totalCount}{" "}
-                    {t("choose-offer:active-offers","Active Offers")}
-                    <ProjectSorting>
-                      <div className="project-sort-bar">
-                        <div
-                          className="project-sort-search"
-                          style={{ marginTop: "25px" }}
-                        >
-                          <AutoComplete
-                            onSearch={(value) => onSearchChange(value)}
-                            placeholder={t(
-                  "choose-offer.search-placeholder",
-                  "Search Offer"
-                )}
-                            patterns
-                          />
-                        </div>
-                      </div>
-                    </ProjectSorting>
-                  </>
-                }
-                buttons={[
-                  <ExportButtonPageApiHeader
-                    key="1"
-                    callFrom={"choose-offer"}
-                    filterType={0}
-                    municipalityId={""}
-                    entityId={""}
-                    search={query.search}
-                    typeOfEquipmentId={""}
-                    from={""}
-                    to={""}
-                  />,
-                ]}
-              />
-            </CardToolbox>
+      <CardToolbox>
+        <PageHeader
+          ghost
+          title={t("choose-offer.title", "Choose Offer")}
+          subTitle={
+            <>
+              {chooseOfferData?.totalCount}{" "}
+              {t("choose-offer:active-offers", "Active Offers")}
+            </>
+          }
+        />
+      </CardToolbox>
 
-      <UserCard
-              style={{
-                padding: "20px 10px",
-                maxWidth: "1440px",
-                margin: "0 auto",
-                boxSizing: "border-box",
-                marginTop:'-40px'
-              }}
-              key={"choose-offer"}
-                >
-        <Row  
+      <Main
+        style={{
+          padding: "20px 10px",
+          maxWidth: "1440px",
+          margin: "0 auto",
+          boxSizing: "border-box",
+          marginTop: '-40px'
+        }}
+        key={"choose-offer"}
+      >
+        <Row
           gutter={[24, 24]}
           justify="start"
           style={{ width: "98%", margin: 0 }}
         >
-          {chooseOfferData?.items.map((offer,index) => (
-              <Col xl={8} lg={8} md={12} sm={12} xs={24} style={{ display: "flex" }}>
+          {chooseOfferData?.items.map((offer, index) => (
+            <Col xl={8} lg={8} md={12} sm={12} xs={24} style={{ display: "flex" }} key={offer.id}>
               <OfferCardStyled
+                id={`offer-card-${offer.id}`}
                 style={{
                   border:
-                    offer.id === 4
+                    !isExpired(offer?.expiryDateTime) && offer.isScheduleDiffers
                       ? "2px solid #F46A6A"
-                      : offer.expired
-                      ? "1px solid #FADCDC"
-                      : "1px solid #E6E9F4",
-                  backgroundColor: offer.expired ? "#FFF5F5" : "#fff",
+                      : isExpired(offer?.expiryDateTime)
+                        ? "1px solid #FADCDC"
+                        : "1px solid #E6E9F4",
+                  backgroundColor: isExpired(offer?.expiryDateTime) ? "#FFF5F5" : "#fff",
                   borderRadius: 12,
                   padding: 20,
                   paddingBottom: 0,
@@ -168,7 +216,11 @@ function ListChooseOfferPage() {
                 key={offer.id}
               >
 
-              {offer.id === 4 && (
+                {!isExpired(offer?.expiryDateTime) && offer.isScheduleDiffers && (
+                  <Tooltip title={t(
+                    "choose-offer.schedule-slightly-differs",
+                    "The proposed schedule slightly differs from the originally requested delivery."
+                  )}>
                     <div
                       style={{
                         position: "absolute",
@@ -188,7 +240,8 @@ function ListChooseOfferPage() {
                     >
                       !
                     </div>
-                  )}
+                  </Tooltip>
+                )}
 
                 <div
                   style={{
@@ -207,8 +260,8 @@ function ListChooseOfferPage() {
                   >
                     <div
                       style={{
-                        backgroundColor: offer.expired ? "#000" : "#5F63F2",
-                        color: offer.expired ? "#fff" : "#fff",
+                        backgroundColor: isExpired(offer?.expiryDateTime) ? "#000" : "#5F63F2",
+                        color: isExpired(offer?.expiryDateTime) ? "#fff" : "#fff",
                         borderRadius: "50%",
                         width: 72,
                         height: 72,
@@ -219,7 +272,7 @@ function ListChooseOfferPage() {
                         fontWeight: 700,
                         fontSize: 16,
                         flexShrink: 0,
-                        opacity: offer.expired ? 0.6 : 1,
+                        opacity: isExpired(offer?.expiryDateTime) ? 0.6 : 1,
                       }}
                     >
                       <div style={{ fontSize: 20, fontWeight: 700 }}>{offer.adminApprovedPrice}</div>
@@ -230,7 +283,7 @@ function ListChooseOfferPage() {
                         style={{
                           fontWeight: 600,
                           fontSize: 17,
-                          color: offer.expired ? "#777" : "#000",
+                          color: isExpired(offer?.expiryDateTime) ? "#777" : "#000",
                           wordWrap: "break-word",
                           textAlign: "left",
                           paddingLeft: 10
@@ -238,7 +291,7 @@ function ListChooseOfferPage() {
                       >
                         {t("global:offer-no", "Offer No.") + String(index + 1).padStart(2, "0")}
                       </div>
-                      <div style={{ fontSize: 12, color: "#888", whiteSpace: "normal",wordBreak: "break-word",overflow: "visible", textAlign: "left", paddingLeft: 10}}>
+                      <div style={{ fontSize: 12, color: "#888", whiteSpace: "normal", wordBreak: "break-word", overflow: "visible", textAlign: "left", paddingLeft: 10 }}>
                         {/* {(t("choose-offer.description", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam"))} */}
                       </div>
                     </div>
@@ -253,7 +306,7 @@ function ListChooseOfferPage() {
                           style={{
                             fontWeight: 600,
                             fontSize: 13,
-                            color: offer.expired ? "#888" : "#111",
+                            color: isExpired(offer?.expiryDateTime) ? "#888" : "#111",
                             marginBottom: 4,
                           }}
                         >
@@ -265,23 +318,23 @@ function ListChooseOfferPage() {
                             justifyContent: "center",
                             alignItems: "center",
                             gap: 8,
-                            color: offer.expired ? "#999" : "#666",
+                            color: isExpired(offer?.expiryDateTime) ? "#999" : "#666",
                             fontSize: 13,
                           }}
                         >
                           {/* <span>{offer.pickup.split(" - ")[0] || offer.pickup}</span> */}
-                          <span>{formatDate2(offer?.pickupDateFrom)}</span>
+                          <span>{formatDate2(offer?.estimatedPickupDateTimeFrom)}</span>
                           <FeatherIcon
                             size={16}
                             icon="corner-up-right"
-                            style={{   
-                            color: "#6563ff",
-                            fontSize: "18px",
-                            verticalAlign: "middle", 
-                          }} 
+                            style={{
+                              color: "#6563ff",
+                              fontSize: "18px",
+                              verticalAlign: "middle",
+                            }}
                           />
                           {/* <span>{offer.pickup.split(" - ")[1] || offer.delivery}</span> */}
-                          <span>{<span>{formatDate2(offer?.pickupDateTo)}</span>}</span>
+                          <span>{<span>{formatDate2(offer?.estimatedPickupDateTimeTo)}</span>}</span>
                         </div>
                       </div>
 
@@ -290,7 +343,7 @@ function ListChooseOfferPage() {
                           style={{
                             fontWeight: 600,
                             fontSize: 13,
-                            color: offer.expired ? "#888" : "#111",
+                            color: isExpired(offer?.expiryDateTime) ? "#888" : "#111",
                             marginBottom: 6,
                           }}
                         >
@@ -299,10 +352,13 @@ function ListChooseOfferPage() {
                         <div
                           style={{
                             fontSize: 13,
-                            color: offer.expired ? "#999" : "#666",
+                            color: isExpired(offer?.expiryDateTime) ? "#999" : "#666",
                           }}
                         >
-                          {offer.loadTime}
+                          {`${getDaysBetween(offer?.estimatedPickupDateTimeFrom, offer?.estimatedDeliveryDateTimeTo)} ${getDaysBetween(offer?.estimatedPickupDateTimeFrom, offer?.estimatedDeliveryDateTimeTo) > 1
+                            ? t("global.days", "Days")
+                            : t("global.day", "Day")
+                            }`}
                         </div>
                       </div>
                     </Col>
@@ -314,7 +370,7 @@ function ListChooseOfferPage() {
                             fontWeight: 600,
                             fontSize: 13,
                             fontSize: 13,
-                            color: offer.expired ? "#888" : "#111",
+                            color: isExpired(offer?.expiryDateTime) ? "#888" : "#111",
                             marginBottom: 6,
                           }}
                         >
@@ -326,28 +382,28 @@ function ListChooseOfferPage() {
                             justifyContent: "center",
                             alignItems: "center",
                             gap: 8,
-                            color: offer.expired ? "#999" : "#666",
+                            color: isExpired(offer?.expiryDateTime) ? "#999" : "#666",
                             fontSize: 13,
                           }}
                         >
                           {/* <span>{offer.delivery.split(" - ")[0] || offer.delivery}</span> */}
-                          <span>{formatDate2(offer?.deliveryDateFrom)}</span>
+                          <span>{formatDate2(offer?.estimatedDeliveryDateTimeFrom)}</span>
                           <FeatherIcon
                             size={16}
                             icon="corner-up-right"
-                            style={{   
-                            color: "#6563ff",
-                            fontSize: "18px",
-                            verticalAlign: "middle", 
-                          }} 
+                            style={{
+                              color: "#6563ff",
+                              fontSize: "18px",
+                              verticalAlign: "middle",
+                            }}
                           />
                           {/* <span>{offer.delivery.split(" - ")[1] || "16.08.2025"}</span> */}
-                          <span>{<span>{formatDate2(offer?.deliveryDateTo)}</span>}</span>
+                          <span>{<span>{formatDate2(offer?.estimatedDeliveryDateTimeTo)}</span>}</span>
                         </div>
                       </div>
 
                       <div style={{ textAlign: "center", marginTop: 30 }}>
-                      {offer.expired ? (
+                        {isExpired(offer?.expiryDateTime) ? (
                           <div
                             style={{
                               fontSize: 15,
@@ -359,26 +415,26 @@ function ListChooseOfferPage() {
                           </div>
                         ) : (
                           <>
-                        <div
-                          style={{
-                            fontWeight: 600,
-                            fontSize: 13,
-                            color: offer.expired ? "#888" : "#111",
-                            marginBottom: 6,
-                          }}
-                        >
-                          {t("choose-offer.offer-expired-time", "Offer Expired Time")}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            color: offer.expired ? "#F46A6A" : "#5F63F2",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {offer.expiredTime}
-                        </div>
-                        </>
+                            <div
+                              style={{
+                                fontWeight: 600,
+                                fontSize: 13,
+                                color: isExpired(offer?.expiryDateTime) ? "#888" : "#111",
+                                marginBottom: 6,
+                              }}
+                            >
+                              {t("choose-offer.offer-expired-time", "Offer Expired Time")}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: 13,
+                                color: isExpired(offer?.expiryDateTime) ? "#F46A6A" : "#5F63F2",
+                                fontWeight: 600,
+                              }}
+                            >
+                              <CountdownTimerForExpire startTime={offer.expiryDateTime} duration={24} />
+                            </div>
+                          </>
                         )}
                       </div>
                     </Col>
@@ -386,14 +442,14 @@ function ListChooseOfferPage() {
                 </div>
 
                 <Progress
-                  percent={offer.progress}
+                  percent={getExpiryProgressPercent(offer.expiryDateTime)}
                   showInfo={false}
-                  strokeColor={offer.expired ? "#000" : "#5F63F2"} 
+                  strokeColor={isExpired(offer?.expiryDateTime) ? "#000" : "#5F63F2"}
                   strokeWidth={4}
                   style={{ marginTop: 32 }}
                 />
 
-                {offer.warning && (
+                {!isExpired(offer?.expiryDateTime) && offer.isScheduleDiffers && (
                   <div
                     style={{
                       color: "#F46A6A",
@@ -402,15 +458,27 @@ function ListChooseOfferPage() {
                       textAlign: "left",
                     }}
                   >
-                    {offer.warning}
+                    {t(
+                      "choose-offer.schedule-slightly-differs",
+                      "The proposed schedule slightly differs from the originally requested delivery."
+                    )}
                   </div>
                 )}
-              
-              {!offer.expired ? (               
-                      <div className="card-buttons">
+
+                {!isExpired(offer?.expiryDateTime) ? (
+                  <div className="card-buttons d-flex justify-content-center my-3">
+                    <Popconfirm
+                      title={t(
+                        "my-request.choose-offer",
+                        "Are you sure you want to book this offer?"
+                      )}
+                      onConfirm={() => handleSubmit(offer)}
+                      okText={t("global.yes", "Yes")}
+                      cancelText={t("global.no", "No")}
+                    >
                       <Button
                         htmlType="submit"
-                        className="card-button my-3"
+                        className="card-button"
                         style={{
                           border: "1px solid #e4e4e4",
                           backgroundColor: "#21C998",
@@ -418,11 +486,24 @@ function ListChooseOfferPage() {
                         }}
                       >
                         {t(
-                          "choose-offer.book-now",
-                          "Book Now"
+                          "review-offer.accept-offer",
+                          "Accept Offer"
                         )}
                       </Button>
-                      <Button
+                    </Popconfirm>
+
+                    <Button
+                      className="card-button mx-2"
+                      onClick={() => handleDownloadPDF(offer.id)}
+                      style={{
+                        border: "1px solid #5F63F2",
+                        color: "#5F63F2",
+                        backgroundColor: "#fff",
+                      }}
+                    >
+                      {t("choose-offer.download-pdf", "Download PDF")}
+                    </Button>
+                    {/* <Button
                         className="card-button mx-3"
                         style={{
                           border: "1px solid #FE6566",
@@ -430,29 +511,29 @@ function ListChooseOfferPage() {
                         }}
                       >
                         {t("choose-offer.view", "View")}
-                      </Button>
-                    </div>
-                     ) : "" }
-                 </OfferCardStyled>
+                      </Button> */}
+                  </div>
+                ) : ""}
+              </OfferCardStyled>
             </Col>
           ))}
 
-              <Col xs={24}>
-              <div className="user-card-pagination" style={{display: "flex", justifyContent: "end", marginRight: 50}}>
-                <Pagination
-                  current={chooseOfferData?.pageIndex}
-                  total={chooseOfferData?.totalCount}
-                  pageSize={query.pageSize}
-                  showSizeChanger
-                  pageSizeOptions= {[10, 50, 100, 1000]}
-                  onChange={onPaginationChange}
-                  onShowSizeChange={onShowSizeChange}
-                  showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} offers`}
-                />
-              </div>
-            </Col>
-          </Row>
-    </UserCard>
+          <Col xs={24}>
+            <div className="user-card-pagination" style={{ display: "flex", justifyContent: "end" }}>
+              <Pagination
+                current={chooseOfferData?.pageIndex}
+                total={chooseOfferData?.totalCount}
+                pageSize={query.pageSize}
+                showSizeChanger
+                pageSizeOptions={[10, 50, 100, 1000]}
+                onChange={onPaginationChange}
+                onShowSizeChange={onShowSizeChange}
+                showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} offers`}
+              />
+            </div>
+          </Col>
+        </Row>
+      </Main>
     </>
   );
 }

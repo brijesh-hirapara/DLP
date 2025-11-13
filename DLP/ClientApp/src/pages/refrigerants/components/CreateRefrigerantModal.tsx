@@ -66,7 +66,6 @@ export const CreateRefrigerantModal = ({
     if (!refrigerantToEdit) {
       return;
     }
-    console.log({ refrigerantToEdit });
     form.setFieldsValue(refrigerantToEdit);
   }, [refrigerantToEdit, form]);
 

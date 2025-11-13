@@ -59,16 +59,24 @@ namespace DLP.Application.TransportManagemen.Commands
                         {
                             carrier.Status = TransportCarrierStatus.Rejected;
                             hasChanges = true;
-
-                            // Optional: Add email notifications here if needed
-                            //bool isSendEmail = await _emailTemplateService.SendOfferRejectedEmail(supplier.SupplierId.ToString(), offer, cancellationToken);
-                            //bool isSendEmail1 = await _emailTemplateService.SendOfferRejectedEmailFromConsumer(supplier.SupplierId.ToString(), offer, cancellationToken);
-
                         }
+                    }
+
+                    var isCheckOffer = transportRequest.TransportCarrier.Find(x => x.IsAdminApproved && x.Status == TransportCarrierStatus.Accepted);
+
+                    if (isCheckOffer == null)
+                    {
+                        transportRequest.Status = TransportRequestStatus.Cancelled;
+                        await _dbContext.SaveChangesAsync(cancellationToken);
                     }
 
                     if (hasChanges)
                         await _dbContext.SaveChangesAsync(cancellationToken);
+                }
+                else
+                {
+                    transportRequest.Status = TransportRequestStatus.Cancelled;
+                    await _dbContext.SaveChangesAsync(cancellationToken);
                 }
 
                 // Update main transport request status

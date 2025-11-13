@@ -50,6 +50,7 @@ namespace DLP.Application.VehicleFleetRequests.Commands
                 {
                     Id = Guid.NewGuid(),
                     Status = (int)VehicleFleetRequestStatus.Pending,
+                    OrganizationId = _currentUser.OrganizationId,
                     CreatedAt = DateTime.UtcNow,
                     CreatedById = _currentUser.UserId,
                     IsDeleted = false

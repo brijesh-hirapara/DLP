@@ -37,8 +37,6 @@ export const CommonDataProvider = ({ children }) => {
         hasPermission("user-groups:list") ? userGroupsApi.userGroupsGet() : new Promise((resolve) => resolve({ data: [] })),
       ]);
 
-      console.log(userGroupsResponse,"userGroupsResponse");
-
       setCommonData({
         languages: languagesResponse?.data,
         stateEntities:[],

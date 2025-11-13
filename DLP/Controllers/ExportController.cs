@@ -171,6 +171,7 @@ public class ExportController : ApiControllerBase
                         // Select specific columns for export
                         No = u.OrdinalNumber,
                         Name = u.Name,
+                        Comments = u.Comments,
                         ActionedAt = u.ActionedAt.HasValue
                         ? ConvertUtcToLocalAndFormat(u.ActionedAt.Value, request.TimeZone, dateFormat)
                         : "-",
@@ -187,6 +188,7 @@ public class ExportController : ApiControllerBase
                     {
                         { "No",await _translationService.Translate(userLanguageId, "global.no", "No") },
                         { "Name",await _translationService.Translate(userLanguageId, "global.company-name", "Company Name")  },
+                        { "Comments",await _translationService.Translate(userLanguageId, "global.comments", "Comments")  },
                         { "ActionedAt",await _translationService.Translate(userLanguageId, "global.approval-date", "Approval Date")  },
                         { "TotalVehicle",await _translationService.Translate(userLanguageId, "global.number-of-vehicles", "Number of Vehicles")  },
                         { "UpdatedAt",await _translationService.Translate(userLanguageId, "global.last-updated", "Last Updated")  },
@@ -312,6 +314,206 @@ public class ExportController : ApiControllerBase
                     };
 
                     return ExportType(transportRequestsExcel, request.ExportType, "TransportRequests", userColumnNames);
+
+
+
+                case "ManageTransportRequests":
+                    var managetransportRequestsResponse = await Mediator.Send(new GetTransportRequesQuery
+                    {
+                        Search = request.Search,
+                        Status = (TransportRequestStatus?)request.FilterType,
+                        IsFromExport = true
+                    });
+
+                    var managetransportRequestsExcel = managetransportRequestsResponse.Items.Select(u =>
+                    {
+                        var info = u.TransportInformation?.FirstOrDefault();
+                        var pickup = u.TransportPickup?.FirstOrDefault();
+                        var delivery = u.TransportDelivery?.FirstOrDefault();
+
+                        // Helper function for formatting times safely
+                        string FormatTime(string? time) =>
+                            DateTime.TryParse(time, out var parsed)
+                                ? parsed.ToString("HH:mm")
+                                : string.Empty;
+
+                        // ----- Possible Pick-Up -----
+                        string possiblePickup;
+                        if (info == null)
+                        {
+                            possiblePickup = $"{pickup?.City ?? ""}, {pickup?.PostalCode ?? ""}, {pickup?.CountryName ?? ""}";
+                        }
+                        else if (info?.PickupDateFrom != null && info?.PickupDateTo != null)
+                        {
+                            var timeFrom = FormatTime(info.PickupTimeFrom);
+                            var timeTo = FormatTime(info.PickupTimeTo);
+
+                            possiblePickup =
+                                $"{info.PickupDateFrom:dd.MM.yyyy} - {info.PickupDateTo:dd.MM.yyyy}\n" +
+                                ((!string.IsNullOrEmpty(timeFrom) || !string.IsNullOrEmpty(timeTo))
+                                    ? $" | {timeFrom} - {timeTo}\n"
+                                    : string.Empty) +
+                                $" | {pickup?.City ?? ""}, {pickup?.PostalCode ?? ""}, {pickup?.CountryName ?? ""}";
+                        }
+                        else
+                        {
+                            possiblePickup = $"{pickup?.City ?? ""}, {pickup?.PostalCode ?? ""}, {pickup?.CountryName ?? ""}";
+                        }
+
+                        // ----- Requested Delivery -----
+                        string requestedDelivery;
+                        if (info == null)
+                        {
+                            requestedDelivery = $"{delivery?.City ?? ""}, {delivery?.PostalCode ?? ""}, {delivery?.CountryName ?? ""}";
+                        }
+                        else if (info?.DeliveryDateFrom != null && info?.DeliveryDateTo != null)
+                        {
+                            var timeFrom = FormatTime(info.DeliveryTimeFrom);
+                            var timeTo = FormatTime(info.DeliveryTimeTo);
+
+                            requestedDelivery =
+                                $"{info.DeliveryDateFrom:dd.MM.yyyy} - {info.DeliveryDateTo:dd.MM.yyyy}\n" +
+                                ((!string.IsNullOrEmpty(timeFrom) || !string.IsNullOrEmpty(timeTo))
+                                    ? $" | {timeFrom} - {timeTo}\n"
+                                    : string.Empty) +
+                                $" | {delivery?.City ?? ""}, {delivery?.PostalCode ?? ""}, {delivery?.CountryName ?? ""}";
+                        }
+                        else
+                        {
+                            requestedDelivery = $"{delivery?.City ?? ""}, {delivery?.PostalCode ?? ""}, {delivery?.CountryName ?? ""}";
+                        }
+
+                        return new
+                        {
+                            RequestID = u.RequestId,
+                            ShipperName = u.ShipperName,
+                            PossiblePickUp = possiblePickup,
+                            RequestedDelivery = requestedDelivery,
+                            TotalDistance = u.TotalDistance,
+                            Goods = u.TransportGoods.FirstOrDefault()?.TypeOfGoodsName,
+                            Status = u.StatusDesc,
+                            InvitedCarriers = u.CarrierCount,
+                            Offers = u.OfferCount,
+                        };
+                    }).ToList();
+
+                    userColumnNames = new Dictionary<string, string>
+                    {
+                        { "RequestID", await _translationService.Translate(userLanguageId, "global.request-id", "Request ID") },
+                        { "ShipperName", await _translationService.Translate(userLanguageId, "global.shipper-name", "Shipper Name") },
+                        { "PossiblePickUp", await _translationService.Translate(userLanguageId, "global.Estimated-Pick-Up", "Estimated Pick-Up") },
+                        { "RequestedDelivery", await _translationService.Translate(userLanguageId, "global.delivery", "Delivery") },
+                        { "TotalDistance", await _translationService.Translate(userLanguageId, "global.total-distance", "Total Distance") },
+                        { "Goods", await _translationService.Translate(userLanguageId, "global.goods", "Goods") },
+                        { "Status", await _translationService.Translate(userLanguageId, "global.status", "Status") },
+                        { "InvitedCarriers", await _translationService.Translate(userLanguageId, "global.invited-carriers", "Invited Carriers") },
+                        { "Offers", await _translationService.Translate(userLanguageId, "global.offers", "Offers") },
+                    };
+
+                    return ExportType(managetransportRequestsExcel, request.ExportType, "ManageTransportRequests", userColumnNames);
+
+
+                case "ArchivedRequests":
+                    var transportArchivedRequestsResponse = await Mediator.Send(new GetCarrierTransportRequesQuery
+                    {
+                        Search = request.Search,
+                        Status = (TransportCarrierStatus?)request.FilterType,
+                        ListArchived = true,
+                        IsFromExport = true
+                    });
+
+                    var transportArchivedRequestsExcel = transportArchivedRequestsResponse.Items.Select(u =>
+                    {
+                        var info = u.TransportInformation?.FirstOrDefault();
+                        var pickup = u.TransportPickup?.FirstOrDefault();
+                        var delivery = u.TransportDelivery?.FirstOrDefault();
+                        var goods = u.TransportGoods?.FirstOrDefault();
+
+                        // Helper function for formatting times safely
+                        string FormatTime(string? time) =>
+                            DateTime.TryParse(time, out var parsed)
+                                ? parsed.ToString("HH:mm")
+                                : string.Empty;
+
+                        // ----- Possible Pick-Up -----
+                        string possiblePickup;
+                        if (info == null)
+                        {
+                            possiblePickup = $"{pickup?.City ?? ""}, {pickup?.PostalCode ?? ""}, {pickup?.CountryName ?? ""}";
+                        }
+                        else if (info?.PickupDateFrom != null && info?.PickupDateTo != null)
+                        {
+                            var timeFrom = FormatTime(info.PickupTimeFrom);
+                            var timeTo = FormatTime(info.PickupTimeTo);
+
+                            possiblePickup =
+                                $"{info.PickupDateFrom:dd.MM.yyyy} - {info.PickupDateTo:dd.MM.yyyy}\n" +
+                                ((!string.IsNullOrEmpty(timeFrom) || !string.IsNullOrEmpty(timeTo))
+                                    ? $" | {timeFrom} - {timeTo}\n"
+                                    : string.Empty) +
+                                $" | {pickup?.City ?? ""}, {pickup?.PostalCode ?? ""}, {pickup?.CountryName ?? ""}";
+                        }
+                        else
+                        {
+                            possiblePickup = $"{pickup?.City ?? ""}, {pickup?.PostalCode ?? ""}, {pickup?.CountryName ?? ""}";
+                        }
+
+                        // ----- Requested Delivery -----
+                        string requestedDelivery;
+                        if (info == null)
+                        {
+                            requestedDelivery = $"{delivery?.City ?? ""}, {delivery?.PostalCode ?? ""}, {delivery?.CountryName ?? ""}";
+                        }
+                        else if (info?.DeliveryDateFrom != null && info?.DeliveryDateTo != null)
+                        {
+                            var timeFrom = FormatTime(info.DeliveryTimeFrom);
+                            var timeTo = FormatTime(info.DeliveryTimeTo);
+
+                            requestedDelivery =
+                                $"{info.DeliveryDateFrom:dd.MM.yyyy} - {info.DeliveryDateTo:dd.MM.yyyy}\n" +
+                                ((!string.IsNullOrEmpty(timeFrom) || !string.IsNullOrEmpty(timeTo))
+                                    ? $" | {timeFrom} - {timeTo}\n"
+                                    : string.Empty) +
+                                $" | {delivery?.City ?? ""}, {delivery?.PostalCode ?? ""}, {delivery?.CountryName ?? ""}";
+                        }
+                        else
+                        {
+                            requestedDelivery = $"{delivery?.City ?? ""}, {delivery?.PostalCode ?? ""}, {delivery?.CountryName ?? ""}";
+                        }
+
+                        // ----- Cargo -----
+                        string cargo = goods != null
+                            ? $"Qty: {(goods.Quantity.ToString() ?? "0")}, " +
+                              $"L:{(goods.Length.ToString("0.##") ?? "0")} " +
+                              $"W:{(goods.Width.ToString("0.##") ?? "0")} " +
+                              $"H:{(goods.Height.ToString("0.##") ?? "0")} " +
+                              $"Kg:{(goods.Weight.ToString("0.##") ?? "0")}"
+                            : string.Empty;
+
+
+
+                        return new
+                        {
+                            RequestID = u.RequestId,
+                            PossiblePickUp = possiblePickup,
+                            RequestedDelivery = requestedDelivery,
+                            Cargo = cargo,
+                            Price = u.TransportCarrier.FirstOrDefault()?.Price,
+                            Status = u.StatusDesc,
+                        };
+                    }).ToList();
+
+                    userColumnNames = new Dictionary<string, string>
+                    {
+                        { "RequestID", await _translationService.Translate(userLanguageId, "global.request-id", "Request ID") },
+                        { "PossiblePickUp", await _translationService.Translate(userLanguageId, "global.pickup-date-location", "Pickup Date & Location") },
+                        { "RequestedDelivery", await _translationService.Translate(userLanguageId, "global.requested-delivery-location", "Delivery Date & Location") },
+                        { "Cargo", await _translationService.Translate(userLanguageId, "global.cargo", "Cargo") },
+                        { "Price", await _translationService.Translate(userLanguageId, "global.my-price", "My Price") },
+                        { "Status", await _translationService.Translate(userLanguageId, "global.status", "Status") },
+                    };
+
+                    return ExportType(transportArchivedRequestsExcel, request.ExportType, "TransportRequests", userColumnNames);
 
                 case "TransportTemplates":
                     var transportTemplatesResponse = await Mediator.Send(new GetTransportTemplateQuery { Search = request.Search, IsFromExport = true });

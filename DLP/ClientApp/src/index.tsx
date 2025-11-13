@@ -5,6 +5,15 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
+// Ignore ResizeObserver errors
+window.addEventListener('error', e => {
+  if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
+    const resizeObserverErr = document.getElementById('webpack-dev-server-client-overlay');
+    if (resizeObserverErr) resizeObserverErr.style.display = 'none';
+  }
+});
+
+
 const baseUrl = document.getElementsByTagName("base")[0].getAttribute("href");
 const rootElement = document.getElementById("root") as HTMLElement;
 const root = createRoot(rootElement);

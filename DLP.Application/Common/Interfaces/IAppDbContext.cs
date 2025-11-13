@@ -51,6 +51,9 @@ public interface IAppDbContext
     DbSet<TransportGoods> TransportGoods { get; set; }
     DbSet<TransportInformation> TransportInformations { get; set; }
     DbSet<TransportCarrier> TransportCarriers { get; set; }
+    DbSet<Shipment> Shipments { get; set; }
+    DbSet<ShipmentAssignTruck> ShipmentAssignTrucks { get; set; }
+    DbSet<UploadPODFile> UploadPODFiles { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     DatabaseFacade Database { get; }

@@ -90,5 +90,7 @@ public interface IEmailCommunicationService
     Task SendCarrierOfferEmail(List<CarrierOfferEmailViewModel> carrierOfferList, CancellationToken cancellationToken);
     Task SendAdminApprovalEmail(CarrierOfferResultEmailViewModel carrierOfferList, CancellationToken cancellationToken);
     Task SendAdminRejectedEmail(CarrierOfferResultEmailViewModel carrierOfferList, CancellationToken cancellationToken);
+    Task SendSubmitedOfferToSuperAdminEmail(CarrierOfferResultEmailViewModel carrierOfferList, CancellationToken cancellationToken);
+    Task SendPODConfirmationEmail(ShipperShipmentEmailViewModel shipperEmailDetail, CancellationToken cancellationToken);
 
 }

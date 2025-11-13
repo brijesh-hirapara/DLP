@@ -19,6 +19,7 @@ import { Configuration } from "./configuration";
 import globalAxios, { AxiosPromise, AxiosInstance, AxiosRequestConfig } from 'axios';
 const localURL = process.env.REACT_APP_API_URL as string;
 export const BASE_PATH = window.location.hostname === 'localhost' ? localURL: "/".replace(/\/+$/, "");
+export const SIGNALR_HUB_URL = `${BASE_PATH}/transportHub`;
 
 /**
  *

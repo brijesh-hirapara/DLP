@@ -14,6 +14,8 @@ import { useParams } from 'react-router-dom';
 import { RequestsApi } from 'api/api';
 import openNotificationWithIcon from 'utility/notification';
 import { formatDate2 } from 'api/common';
+import startConnection from 'pages/requests/RequestSignalRService';
+import { HubConnection } from '@microsoft/signalr';
 
 const ManageTransportOffers = ({ offer }: { offer?: any }) => {
   const searchTimeout = useRef<any>();
@@ -25,6 +27,7 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [connection, setConnection] = useState<HubConnection | null>(null);
   const [query, setQuery] = useState({
     search: "",
     pageNumber: 1,
@@ -51,12 +54,18 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
       prevOffers.map((offer) => {
         if (offer.id === id) {
           const basePrice = Number(offer.price.split(" ")[0]) || 0;
-          const margin = parseFloat(value) || 0;
-          const newDisplayPrice = `${(basePrice + basePrice * (margin / 100)).toFixed(2)}`;
+          let margin = value.trim();
+          if (!/^\d*\.?\d*$/.test(margin)) {
+            margin = "0";
+          }
+          const parsedMargin = parseFloat(margin);
+          const validMargin = !isNaN(parsedMargin) && parsedMargin >= 0 ? parsedMargin : 0;
+
+          const newDisplayPrice = `${(basePrice + basePrice * (validMargin / 100)).toFixed(2)}`;
 
           return {
             ...offer,
-            margin: value,
+            margin: margin,
             displayPrice: newDisplayPrice,
           };
         }
@@ -70,6 +79,30 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
   useEffect(() => {
     fetchOffers();
   }, [query, params.id]);
+
+  // Signal R code Start
+
+  useEffect(() => {
+    initializeSignalR();
+
+    return () => {
+      if (connection) {
+        connection.stop();
+      }
+    };
+  }, []);
+
+  const initializeSignalR = async () => {
+    const connection: any = await startConnection(onReceiveBid);
+    setConnection(connection);
+  };
+
+  const onReceiveBid = async (id: any, price: any) => {
+    // Handle the received bid data
+    await fetchOffers();
+  };
+
+  // Signal R code End
 
   const fetchOffers = async () => {
     try {
@@ -91,7 +124,16 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
         pickupDateFrom: items.pickupDateFrom,
         pickupDateTo: items.pickupDateTo,
         deliveryDateFrom: items.deliveryDateFrom,
-        deliveryDateTo: items.deliveryDateTo
+        deliveryDateTo: items.deliveryDateTo,
+        estimatedDeliveryDateTimeFrom: items.estimatedDeliveryDateTimeFrom,
+        estimatedDeliveryDateTimeTo: items.estimatedDeliveryDateTimeTo,
+        estimatedPickupDateTimeFrom: items.estimatedPickupDateTimeFrom,
+        estimatedPickupDateTimeTo: items.estimatedPickupDateTimeTo,
+        isAdminApproved: items.isAdminApproved,
+        isShipperBook: items.isShipperBook,
+        adminApprovedPrice: items.adminApprovedPrice,
+        margin: items.profitMargin,
+        isConfirmEvaluation: items.isConfirmEvaluation
       }));
 
       setOffers(formatted);
@@ -114,7 +156,29 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
       if (response.status === 200) {
         openNotificationWithIcon(
           "success",
-          t("requests:success-offer-approval", "Offer approved successfully")
+          t("offerCard.success", "Offer submitted successfully")
+        );
+
+      }
+      fetchOffers();
+    } catch (error) {
+      console.error("Submit Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirmEvalution = async (offer: any) => {
+    setIsLoading(true);
+    try {
+      const data = {
+        id: offer.id,
+      }
+      const response = await requestsApi.apiAdminConfirmEvaluationPut({ transportRequestId: params.id as string, submitOfferTransportManageDto: data });
+      if (response.status === 200) {
+        openNotificationWithIcon(
+          "success",
+          t("offerCard.success", "Offer submitted successfully")
         );
 
       }
@@ -134,7 +198,7 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
       }
       const response = await requestsApi.apiTransportManagementIdRejectOfferPut({
         transportRequestId: params.id as string,
-        submitOfferTransportManageDto:data,
+        submitOfferTransportManageDto: data,
       });
 
       if (response.status === 200) {
@@ -161,19 +225,6 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
             "manage-transport-offers.title",
             "Manage Transport Requests"
           )}
-          buttons={[
-            <ExportButtonPageApiHeader
-              key="1"
-              callFrom={"TransportOffers"}
-              filterType={0}
-              municipalityId={""}
-              entityId={""}
-              search={""}
-              from={""}
-              to={""}
-              typeOfEquipmentId={""}
-            />,
-          ]}
           subTitle={
             <>
               {offers?.length}{" "}
@@ -181,23 +232,6 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
                 "manage-transport-offers:total-active-offers",
                 "Total Active Offers"
               )}
-              <ProjectSorting>
-                <div className="project-sort-bar">
-                  <div
-                    className="project-sort-search"
-                    style={{ marginTop: "25px" }}
-                  >
-                    <AutoComplete
-                      onSearch={(value) => onSearchChange(value)}
-                      patterns
-                      placeholder={t(
-                        "global.auto-complete-placeholder",
-                        "Search..."
-                      )}
-                    />
-                  </div>
-                </div>
-              </ProjectSorting>
             </>
           }
         />
@@ -207,7 +241,7 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
           <Row gutter={25}>
             {offers.map((offer) => (
               <Col key={offer.id} xxl={8} md={12} sm={24} xs={24}>
-                <div className="card-container">
+                <div className={`card-container ${offer.isShipperBook ? "shipper-accepted-request" : ""}`}>
                   <div className="card-header">
                     <span className="card-header-title">{offer.offerNo}</span>
                   </div>
@@ -233,6 +267,7 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
                     <Input
                       className="card-margin-value"
                       value={offer.margin}
+                      disabled={offer.isAdminApproved}
                       onChange={(e) =>
                         updateOfferMargin(offer.id, e.target.value)
                       }
@@ -252,7 +287,7 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
                         </span>
                         <br />
                         <span className="card-info-text">
-                          {formatDate2(offer?.pickupDateFrom)}
+                          {formatDate2(offer?.estimatedPickupDateTimeFrom)}
                           <FeatherIcon
                             size={16}
                             icon="corner-up-right"
@@ -263,7 +298,7 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
                               verticalAlign: "middle",
                             }}
                           />
-                          {formatDate2(offer?.pickupDateTo)}
+                          {formatDate2(offer?.estimatedPickupDateTimeTo)}
                         </span>
                       </div>
                       <div
@@ -279,7 +314,7 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
                         <br />
 
                         <span className="card-info-text">
-                          {formatDate2(offer?.deliveryDateFrom)}
+                          {formatDate2(offer?.estimatedDeliveryDateTimeFrom)}
                           <FeatherIcon
                             size={16}
                             icon="corner-up-right"
@@ -290,7 +325,7 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
                               verticalAlign: "middle",
                             }}
                           />
-                          {formatDate2(offer?.deliveryDateTo)}
+                          {formatDate2(offer?.estimatedDeliveryDateTimeTo)}
                         </span>
                       </div>
                     </div>
@@ -307,45 +342,86 @@ const ManageTransportOffers = ({ offer }: { offer?: any }) => {
                         "manage-transport-offers.display-price",
                         "Display Price"
                       )}
-                      : {offer.displayPrice + " " + offer.currencyName}
+                      : {(offer.isAdminApproved ? offer.adminApprovedPrice : offer.displayPrice) + " " + offer.currencyName}
                     </div>
 
                     <div className="card-buttons">
-                      <Button
-                        htmlType="submit"
-                        className="card-button"
-                        onClick={() => handleSubmitToShipper(offer)}
-                        style={{
-                          border: "1px solid #e4e4e4",
-                          backgroundColor: "#21C998",
-                          color: "#fff",
-                        }}
-                      >
-                        {t(
-                          "manage-transport-offers.submit",
-                          "Submit To Shipper"
-                        )}
-                      </Button>
-                      <Popconfirm
-                        title={t(
-                          "institutions.reject-offer",
-                          "Are you sure reject this offer?"
-                        )}
-                        onConfirm={() => handleRejectOffer(offer)}
-                        okText={t("global.yes", "Yes")}
-                        cancelText={t("global.no", "No")}
-                      >
-                        <Button
-                          className="card-button"
-                          style={{
-                            border: "1px solid #FE6566",
-                            color: "#FE6566",
-                          }}
+                      {!offer.isAdminApproved && (
+                        <>
+                          <Popconfirm
+                            title={t(
+                              "my-request.choose-offer-submit",
+                              "Are you sure you want to submit this offer?"
+                            )}
+                            onConfirm={() => handleSubmitToShipper(offer)}
+                            okText={t("global.yes", "Yes")}
+                            cancelText={t("global.no", "No")}
+                          >
+                            <Button
+                              htmlType="submit"
+                              className="card-button"
+                              style={{
+                                border: "1px solid #e4e4e4",
+                                backgroundColor: "#21C998",
+                                color: "#fff",
+                              }}
+                            >
+                              {t(
+                                "manage-transport-offers-purchaser.submit",
+                                "Submit To Purchaser"
+                              )}
+                            </Button>
+                          </Popconfirm>
+                          <Popconfirm
+                            title={t(
+                              "institutions.reject-offer",
+                              "Are you sure reject this offer?"
+                            )}
+                            onConfirm={() => handleRejectOffer(offer)}
+                            okText={t("global.yes", "Yes")}
+                            cancelText={t("global.no", "No")}
+                          >
+                            <Button
+                              className="card-button"
+                              style={{
+                                border: "1px solid #FE6566",
+                                color: "#FE6566",
+                              }}
+                            >
+                              {t("manage-transport-offers.reject", "Reject")}
+                            </Button>
+                          </Popconfirm>
+                        </>
+                      )}
+                      {(offer.isShipperBook && !offer.isConfirmEvaluation) && (
+                        <Popconfirm
+                          title={t(
+                            "my-request.choose-offers-confirm-evaluation",
+                            "Do you confirm this evaluation?"
+                          )}
+                          onConfirm={() => handleConfirmEvalution(offer)}
+                          okText={t("global.yes", "Yes")}
+                          cancelText={t("global.no", "No")}
                         >
-                          {t("manage-transport-offers.reject", "Reject")}
-                        </Button>
-                      </Popconfirm>
+                          <Button
+                            htmlType="submit"
+                            className="card-button"
+                            style={{
+                              border: "1px solid #e4e4e4",
+                              backgroundColor: "#21C998",
+                              color: "#fff",
+                            }}
+                          >
+                            {t(
+                              "manage-transport-offers.confirm-evaluation",
+                              "Confirm Evaluation"
+                            )}
+                          </Button>
+                        </Popconfirm>
+                      )}
+
                     </div>
+
                   </div>
                 </div>
               </Col>

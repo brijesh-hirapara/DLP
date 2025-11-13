@@ -388,7 +388,7 @@ public class EmailCommunicationService : IEmailCommunicationService
             return;
 
         // Get the base client URL from config
-        var clientBaseUrl = _configuration["AppSettings:ClientBaseUrl"] ?? "https://portal.transigo.com";
+        var clientBaseUrl = _configuration["SiteUrl"];
 
         foreach (var carrier in carrierOfferList)
         {
@@ -481,6 +481,87 @@ public class EmailCommunicationService : IEmailCommunicationService
         EnqueueEmailNotification(emailNotification, cancellationToken);
     }
 
+    public async Task SendSubmitedOfferToSuperAdminEmail(CarrierOfferResultEmailViewModel carrierOffer, CancellationToken cancellationToken)
+    {
+        if (carrierOffer == null)
+            return;
+
+        // Get language for email localization
+        var languageCode = await GetLanguageCode(LanguageConstants.DefaultLanguageId.Value, cancellationToken);
+        carrierOffer.UserLang = languageCode;
+
+        // Get SuperAdmin role IDs
+        var superAdminRoleIds = await _dbContext.Roles
+            .Where(r => r.NormalizedName == "SUPERADMIN" || r.Name == "Super Administrator")
+            .Select(r => r.Id)
+            .ToListAsync(cancellationToken);
+
+        // Fetch all active and non-deleted SuperAdmins (get user info, not just emails)
+        var superAdmins = await _dbContext.UserRoles
+            .Include(ur => ur.User)
+            .Where(ur => superAdminRoleIds.Contains(ur.RoleId)
+                         && ur.User.IsActive
+                         && !ur.User.IsDeleted)
+            .Select(ur => new
+            {
+                ur.User.Email,
+                ur.User.FullName
+            })
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (superAdmins == null || !superAdmins.Any())
+            return;
+
+        // Prepare email notifications for each SuperAdmin
+        var emailNotification = new EmailNotification
+        {
+            Emails = superAdmins.Select(user => new EmailInfo
+            {
+                Type = EmailType.SubmitedOfferToSendAdmin, // Change if using another type like SubmittedOffer
+                Data = new CarrierOfferResultEmailViewModel
+                {
+                    Email = user.Email,
+                    FullName = user.FullName ?? carrierOffer.FullName,
+                    UserLang = carrierOffer.UserLang,
+                    RequestId = carrierOffer.RequestId,
+                    EvaluationResult = carrierOffer.EvaluationResult
+                }
+            }).ToList()
+        };
+
+        // Queue background email job
+        EnqueueEmailNotification(emailNotification, cancellationToken);
+    }
+
+    public async Task SendPODConfirmationEmail(ShipperShipmentEmailViewModel shipperEmailDetail, CancellationToken cancellationToken)
+    {
+        if (shipperEmailDetail == null || string.IsNullOrEmpty(shipperEmailDetail.Email))
+            return;
+
+        // Prepare email notification
+        var emailNotification = new EmailNotification
+        {
+            Emails = new List<EmailInfo>
+        {
+            new EmailInfo
+            {
+                Type = EmailType.PODConfirmation,
+                Data = new ShipperShipmentEmailViewModel
+                {
+                    Email = shipperEmailDetail.Email,
+                    FullName = shipperEmailDetail.FullName,
+                    UserLang = shipperEmailDetail.UserLang,
+                    RequestId = shipperEmailDetail.RequestId,
+                    EvaluationResult = shipperEmailDetail.EvaluationResult
+                }
+            }
+        }
+        };
+
+        // Queue background email job
+        EnqueueEmailNotification(emailNotification, cancellationToken);
+    }
 
 
     public async Task CodebookChangeNotification(CodebookChangeViewModel model, DbContextBase dbContext, CancellationToken cancellationToken)
@@ -794,6 +875,18 @@ public class EmailCommunicationService : IEmailCommunicationService
                     string requestCarrierOfferAdminRejectedTemplate = await _templateContentService.RenderToString("CarrierOfferAdminRejected.cshtml", requestCarrierOfferAdminRejectedData);
                     var requestCarrierOfferAdminRejectedSubject = await _translationService.Translate(requestCarrierOfferAdminRejectedData.UserLang, "admin-rejection-offer:email-subject", "Your Offer Was Not Selected");
                     await _emailService.SendEmailAsync(string.Format(requestCarrierOfferAdminRejectedSubject, ""), requestCarrierOfferAdminRejectedTemplate, cancellationToken, requestCarrierOfferAdminRejectedData.Email);
+                    break;
+                case EmailType.SubmitedOfferToSendAdmin:
+                    var requestSubmitOfferData = (CarrierOfferResultEmailViewModel)emailInfo.Data;
+                    string requestSubmitOfferTemplate = await _templateContentService.RenderToString("CarrierSubmitOfferToAdmin.cshtml", requestSubmitOfferData);
+                    var requestSubmitOfferSubject = await _translationService.Translate(requestSubmitOfferData.UserLang, "carrier-submited-offer:email-subject", " Carrier Offer Submitted – Review Required");
+                    await _emailService.SendEmailAsync(string.Format(requestSubmitOfferSubject, ""), requestSubmitOfferTemplate, cancellationToken, requestSubmitOfferData.Email);
+                    break;
+                case EmailType.PODConfirmation:
+                    var podConfirmationData = (ShipperShipmentEmailViewModel)emailInfo.Data;
+                    string podConfirmationTemplate = await _templateContentService.RenderToString("ShipperShipmentEmail.cshtml", podConfirmationData);
+                    var podConfirmationSubject = await _translationService.Translate(podConfirmationData.UserLang, "shipper-shipment-pod-confirmed:email-subject", "Shipment POD Confirmed");
+                    await _emailService.SendEmailAsync(string.Format(podConfirmationSubject, ""), podConfirmationTemplate, cancellationToken, podConfirmationData.Email);
                     break;
 
                 default:

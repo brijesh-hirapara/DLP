@@ -64,3 +64,19 @@ export type TransportRequestStatus = typeof TransportRequestStatus[keyof typeof 
 
 
 
+/**
+ * 
+ * @export
+ * @enum {string}
+ */
+
+export const ShipmentsStatus = {
+    ACTIVE: 1,
+    COMPLETED: 2,
+    ALL: 0
+} as const;
+
+export type ShipmentsStatus = typeof ShipmentsStatus[keyof typeof ShipmentsStatus];
+
+
+

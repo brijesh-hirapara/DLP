@@ -33,4 +33,6 @@ public enum EmailType
     CarrierOfferEmail,
     AdminApprovalEmail,
     AdminRejectedEmail,
+    SubmitedOfferToSendAdmin,
+    PODConfirmation
 }

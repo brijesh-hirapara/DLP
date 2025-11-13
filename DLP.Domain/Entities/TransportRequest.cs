@@ -9,6 +9,8 @@ namespace DLP.Domain.Entities
         public AccessibilityAvailable Accessibility { get; set; }
         public decimal TotalDistance { get; set; }
         public bool IsTemplate { get; set; } = false;
+        public bool IsConfirmEvaluation { get; set; } = false;
+        public DateTime? ConfirmEvaluationAt { get; set; }
         public string? TemplateName { get; set; }
         public TransportRequestStatus Status { get; set; }
         public Guid? OrganizationId { get; set; }

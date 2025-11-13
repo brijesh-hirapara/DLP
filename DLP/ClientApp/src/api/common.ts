@@ -268,3 +268,30 @@ export const formatDate2 = (createdAt: string | Date | null | undefined): string
   return moment(date).utc().format("DD.MM.YYYY");
 };
 
+
+
+export const convertUTCToLocal = (utcDate: string | Date | null | undefined): Date | null => {
+  if (!utcDate) return null;
+
+  // Convert to string if not already
+  const dateString = utcDate instanceof Date ? utcDate.toISOString() : utcDate.toString();
+
+  // Force UTC interpretation (append "Z" if missing)
+  const utcWithZone = dateString.endsWith("Z") ? dateString : `${dateString}Z`;
+
+  // JS automatically converts UTC → local
+  return new Date(utcWithZone);
+};
+
+
+export const formatTime = (createdAt: string | Date | null | undefined): string => {
+  if (!createdAt) return "";
+
+  const date = new Date(createdAt);
+  if (isNaN(date.getTime())) return "";
+
+  // Format as HH:mm (e.g., 09:00)
+  return moment(date).format("HH:mm");
+};
+
+

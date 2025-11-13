@@ -12,7 +12,7 @@ import {
 } from "antd";
 //@ts-ignore
 import FeatherIcon from "feather-icons-react";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthorization } from "hooks/useAuthorization";
 import {
@@ -30,17 +30,17 @@ import { ProjectSorting } from "pages/localization/email/style";
 import { Link, useNavigate } from "react-router-dom";
 import { AutoComplete } from "components/autoComplete/autoComplete";
 import { TransportRequestStatus, UserFilterType, VehicleFleetRequestStatus } from "api/models";
-import { OfferCard } from './OfferSubmitPage';
+import { OfferCard } from "./OfferCard";
 import moment from "moment";
 import { RequestsApi } from "api/api";
 import openNotificationWithIcon from "utility/notification";
 import { sortDirections } from "constants/constants";
 import { useTableSorting } from "hooks/useTableSorting";
+import { ListTransportManagementDtoPaginatedList } from "api/models/list-transport-management-dto-paginated-list";
 
 const requestsApi = new RequestsApi();
 
-
-const ArchivedRequestsPage = () => {
+const ArchivedRequestsPage = (data: any) => {
   const { t } = useTranslation();
   const { hasPermission } = useAuthorization();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -49,7 +49,7 @@ const ArchivedRequestsPage = () => {
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [modalLoading, setModalLoading] = useState(false);
-   const { onSorterChange, sorting } = useTableSorting();
+  //  const { onSorterChange, sorting } = useTableSorting();
    const navigate = useNavigate();
 
   
@@ -101,26 +101,30 @@ const ArchivedRequestsPage = () => {
   search: string;
   pageNumber: number;
   pageSize: number;
-  pickupDate: any;
-  dropOffDate: any;
+  pickupDate: string;
+  deliveryDate: string;
   pickupPostalCode: string;
-  dropOffPostalCode: string;
+  deliveryPostalCode: string;
   status: TransportRequestStatus; 
   listArchived: boolean;
   sortingPropertyName?: string;
   sortingIsDescending?: boolean;
+  pickupDateRange: [moment.Moment] | null;
+  deliveryDateRange: [moment.Moment] | null;
 }>({
   search: "",
   pageNumber: 1,
   pageSize: 10,
-  pickupDate: null,
-  dropOffDate: null,
+  pickupDate: "",
+  deliveryDate: "",
   pickupPostalCode: "",
-  dropOffPostalCode: "",
+  deliveryPostalCode: "",
   status: TransportRequestStatus.ALL,
   listArchived: true,
   sortingPropertyName: undefined,
   sortingIsDescending: undefined,
+  pickupDateRange: null,
+  deliveryDateRange: null,
 });
 
   const onEyeButtonClick = async (item:any) => {
@@ -134,7 +138,11 @@ const ArchivedRequestsPage = () => {
     const detailRes = await requestsApi.apiTransportManagementIdGet({ transportRequestId: item.key });
     setSelectedOfferData(detailRes.data);  
   } catch (e) {
-    openNotificationWithIcon("error", "Failed to load details. Please try again.");
+    // openNotificationWithIcon("error", "Failed to load details. Please try again.");
+      openNotificationWithIcon(
+        "error",
+        t("archived-requests:failed-error-message", "Failed to load details. Please try again.")
+      );
     setSelectedOfferData(null);
   }
   setModalLoading(false);
@@ -143,18 +151,32 @@ const ArchivedRequestsPage = () => {
 
   const transformArchivedRows = (items: any[]) =>
   items.map((item) => {
+    const pickupInfo = item.transportInformation?.[0] || {};
     const pickup = item.transportPickup?.[0] || {};
     const delivery = item.transportDelivery?.[0] || {};
     const goods = item.transportGoods?.[0] || {};
     const carrier = item.transportCarrier?.[0] || {};
     const info = item.transportInformation?.[0] || {};
 
-    const possiblePickup = `${pickup.city || ""}, ${pickup.postalCode || ""}, ${pickup.countryName || ""}`;
-    const requestedDelivery = `${delivery.city || ""}, ${delivery.postalCode || ""}, ${delivery.countryName || ""}`;
+    const possiblePickup =        
+      pickupInfo.pickupDateFrom && pickupInfo.pickupDateTo
+        ? `${moment(pickupInfo.pickupDateFrom).format("DD.MM.YYYY")} - ${moment(pickupInfo.pickupDateTo).format("DD.MM.YYYY")}\n` +
+          (pickupInfo.pickupTimeFrom || pickupInfo.pickupTimeTo
+            ? `${moment(pickupInfo.pickupTimeFrom).format("HH:mm") || ''} - ${moment(pickupInfo.pickupTimeTo).format("HH:mm") || ''}\n`
+            : '') +
+          `${pickup.city || ''}, ${pickup.postalCode || ''}, ${pickup.countryName || ''}`
+        : `${pickup.city || ''}, ${pickup.postalCode || ''}, ${pickup.countryName || ''}`;
+
+    const requestedDelivery =
+        pickupInfo.deliveryDateFrom && pickupInfo.deliveryDateTo
+          ? `${moment(pickupInfo.deliveryDateFrom).format("DD.MM.YYYY")} - ${moment(pickupInfo.deliveryDateTo).format("DD.MM.YYYY")}\n` +
+            (pickupInfo.deliveryTimeFrom || pickupInfo.deliveryTimeTo
+              ? `${moment(pickupInfo.deliveryTimeFrom).format("HH:mm") || ''} - ${moment(pickupInfo.deliveryTimeTo).format("HH:mm") || ''}\n`
+              : '') +
+            `${delivery.city || ''}, ${delivery.postalCode || ''}, ${delivery.countryName || ''}`
+          : `${delivery.city || ''}, ${delivery.postalCode || ''}, ${delivery.countryName || ''}`;
     const cargoStr = `Qty: ${goods.quantity || ""}, L:${goods.length || 0} W:${goods.width || 0} H:${goods.height || 0} Kg:${goods.weight || 0}`;
 
-    // Map carrier.status number to TransportRequestStatus enum
-    // Your enum values are: PENDING=1, ACCEPTED=2, REJECTED=3, ALL=0
     let status: typeof TransportRequestStatus[keyof typeof TransportRequestStatus] = TransportRequestStatus.PENDING;
     const carrierStatusNum = Number(carrier.status);
     if (carrierStatusNum === TransportRequestStatus.ACCEPTED) status = TransportRequestStatus.ACCEPTED;
@@ -163,15 +185,13 @@ const ArchivedRequestsPage = () => {
 
     return {
       key: item.id,
-      id: item.requestId, // for display as Request Id
-      // ordinalNumber: item.ordinalNumber, // use direct number or render component as needed
+      requestId: item.requestId,
       createdAt: item.createdAt ? moment(item.createdAt).format("DD.MM.YYYY") : "",
       comments: item.comments || "",
       possiblePickup,
       requestedDelivery,
       cargo: cargoStr,
       myPrice: carrier.price != null ? carrier.price : "",
-      // Pass status enum and status description string which you can localize
       status,
       statusDesc: carrier.statusDesc || "",
       offerExpired: false,
@@ -186,26 +206,32 @@ const ArchivedRequestsPage = () => {
       pageNumber: query.pageNumber,
       pageSize: query.pageSize,
       search: query.search,
-      pickupDate: query.pickupDate ? query.pickupDate.format("YYYY-MM-DD") : undefined,
-      dropOffDate: query.dropOffDate ? query.dropOffDate.format("YYYY-MM-DD") : undefined,
-      pickupPostalCode: query.pickupPostalCode || undefined,
-      dropOffPostalCode: query.dropOffPostalCode || undefined,
+      pickupDate: query.pickupDateRange && query.pickupDateRange[0]
+        ? query.pickupDateRange[0].format("YYYY-MM-DD")
+        : "",
+      deliveryDate: query.deliveryDateRange && query.deliveryDateRange[0]
+        ? query.deliveryDateRange[0].format("YYYY-MM-DD")
+        : "",
+      pickupPostalCode: query.pickupPostalCode || "",
+      deliveryPostalCode: query.deliveryPostalCode || "",
       type: query.status, 
-      listArchived:true,
+      listArchived: true,
       sortingPropertyName: query.sortingPropertyName,
       sortingIsDescending: query.sortingIsDescending,
     };
+    
+    
     const res = await requestsApi.apiTransportManagementCarrierListGet(params);
     const transformed = transformArchivedRows(res.data.items || []);
     setArchivedRows(transformed);
     setTotalCount(res.data.totalCount || 0);
   } catch (e) {
+    console.error("Fetch error:", e); 
     setArchivedRows([]);
   } finally {
     setLoading(false);
   }
 };
-
 
   useEffect(() => {
     fetchArchivedRows();
@@ -213,10 +239,10 @@ const ArchivedRequestsPage = () => {
     query.pageNumber,
     query.pageSize,
     query.search,
-    query.pickupDate,
-    query.dropOffDate,
+    query.pickupDateRange,
+    query.deliveryDateRange,
     query.pickupPostalCode,
-    query.dropOffPostalCode,
+    query.deliveryPostalCode,
     query.status,
     query.sortingPropertyName, 
     query.sortingIsDescending
@@ -236,53 +262,13 @@ const ArchivedRequestsPage = () => {
   );
 };
 
-
-  const filteredData = useMemo(() => {
-    return archivedRows.filter((item) => {
-      if (
-        query.status !== TransportRequestStatus.ALL &&
-        item.status !== query.status
-      ) return false;
-
-      if (!matchesSearch(item, query.search)) return false;
-
-      if (
-        query.pickupPostalCode &&
-        !item.possiblePickup.toLowerCase().includes(query.pickupPostalCode.toLowerCase())
-      ) return false;
-
-      if (
-        query.dropOffPostalCode &&
-        !item.requestedDelivery.toLowerCase().includes(query.dropOffPostalCode.toLowerCase())
-      ) return false;
-
-      // Pickup Date match (substring from composed string)
-      if (query.pickupDate) {
-        const dtStr = query.pickupDate.format("DD.MM.YYYY");
-        const match = item.raw?.transportInformation?.[0]?.pickupDateFrom
-          ? moment(item.raw.transportInformation[0].pickupDateFrom).format("DD.MM.YYYY")
-          : "";
-        if (match !== dtStr) return false;
-      }
-      // Dropoff Date match
-      if (query.dropOffDate) {
-        const dtStr = query.dropOffDate.format("DD.MM.YYYY");
-        const match = item.raw?.transportInformation?.[0]?.deliveryDateFrom
-          ? moment(item.raw.transportInformation[0].deliveryDateFrom).format("DD.MM.YYYY")
-          : "";
-        if (match !== dtStr) return false;
-      }
-      return true;
-    });
-  }, [archivedRows, query, query.search]);
-
   const columns = [
     {
       title: t("requests.requestId", "Request Id"),
-      dataIndex: "id",
-      key: "id",
-      // sorter: true,
-      // sortDirections: sortDirections,
+      dataIndex: "requestId",
+      key: "requestId",
+      sorter: true,
+      sortDirections: sortDirections,
     },
     {
       title: t("requests.possiblePickup", "Possible Pickup"),
@@ -325,8 +311,16 @@ const ArchivedRequestsPage = () => {
   align: "center" as "center",
   // sorter: true,
   // sortDirections: sortDirections,
-  render: (status: any, record : any) =>
-    getRequestStatus(status, record.statusDesc),
+   render: (status: any, record: any) => (
+    <>
+      {getRequestStatus(status, record.statusDesc)}
+      {record.isExpired && (
+        <Tooltip title={t("offerCard.expiredTooltip", "Offer expired before evaluation")}>
+          <FeatherIcon icon="alert-circle" color="red" size={16} style={{ marginLeft: 8 }} />
+        </Tooltip>
+      )}
+    </>
+  ),
 },
     {
       title: t("requests.actions", "Actions"),
@@ -351,34 +345,46 @@ const ArchivedRequestsPage = () => {
     },
   ];
 
-  const onFilterChange = (e: any) => {
-    setQuery((prev) => ({
-      ...prev,
-      statusFilter: e.target.value as TransportRequestStatus,
-      pageNumber: 1,
-    }));
-  };
-
   
-const handleTableChange = (_ : any, __ : any, sorter : any) => {
-  if (!sorter || Array.isArray(sorter)) return;
-  setQuery(prev => ({
+const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+  // Update page number and page size from pagination
+  setQuery((prev) => ({
     ...prev,
-    sortingPropertyName: sorter.field,
-    sortingIsDescending: sorter.order === 'descend',
-    pageNumber: 1, // reset page
+    pageNumber: pagination.current,
+    pageSize: pagination.pageSize,
+    // Update sorting info only if valid sorter is present
+    sortingPropertyName: !Array.isArray(sorter) && sorter.field ? sorter.field : prev.sortingPropertyName,
+    sortingIsDescending: !Array.isArray(sorter) && sorter.order === "descend",
   }));
 };
 
-const onSearchChange = (value: any) => {
-  setQuery({
-    ...query,
+
+// const onSearchChange = (value: any) => {
+//   setQuery({
+//     ...query,
+//     search: value,
+//     pageNumber: 1,
+//   });
+// };
+
+const onSearchChange = useCallback((value: any) => {
+  setQuery((prev) => ({
+    ...prev,
     search: value,
     pageNumber: 1,
-  });
-};
+  }));
+}, []); 
 
-// Inside your ArchivedRequestsPage component body (before return):
+
+
+  const onPaginationChange = (pageNumber: number) => {
+    setQuery((prevQuery) => ({ ...prevQuery, pageNumber }));
+  };
+
+    const onShowSizeChange = (pageNumber: number, pageSize: number) => {
+    setQuery((prevQuery) => ({ ...prevQuery, pageNumber, pageSize }));
+  };
+
 
 const goodsArray = selectedOfferData?.transportGoods?.[0];
 const carriersArray = selectedOfferData?.transportCarrier?.[0];
@@ -388,6 +394,7 @@ const width = goodsArray?.width ?? 0;
 const height = goodsArray?.height ?? 0;
 
 const ldmValue = length && width && height ? (length * width * height).toFixed(2) : "0";
+  const { RangePicker } = DatePicker;
 
 const getAccessibilityDescription = (accessibility: number | undefined) => {
   switch (accessibility) {
@@ -408,6 +415,12 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
       <PageHeader
         ghost
         title={t("requests.archivedRequests", "Archived Requests")}
+        subTitle={
+          <>
+            {totalCount}{" "}
+            {t("archived-requests:total-archived-requests", "Total Archived Requests")}
+          </>
+        }
         buttons={[
           <ExportButtonPageApiHeader
             key="1"
@@ -417,8 +430,9 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
             entityId={""}
             search={query.search}
             typeOfEquipmentId={""}
-            from={query.pickupDate ? query.pickupDate.format("YYYY-MM-DD") : ""}
-            to={query.dropOffDate ? query.dropOffDate.format("YYYY-MM-DD") : ""}
+            from={query.pickupDateRange ? query.pickupDateRange[0].format("YYYY-MM-DD") : ""}
+            to={query.deliveryDateRange ? query.deliveryDateRange[0].format("YYYY-MM-DD") : ""}
+
           />,
         ]}
       />
@@ -430,22 +444,24 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
                 <div className="project-sort-nav">
                   <nav>
                     <ul>
-                       {filterItems.map((item) => (
-                         <li
+                      {filterItems.map((item) => (
+                        <li
                           key={item.id}
-                          className={query.status === item.id ? "active" : "deactivate"}
+                          className={
+                            query.status === item.id ? "active" : "deactivate"
+                          }
                         >
                           <Link
                             to="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setQuery((prev) => ({
-                                  ...prev,
-                                  status: item.id,
-                                  pageNumber: 1,
-                                  pageSize: 10,
-                                }));
-                              }}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setQuery((prev) => ({
+                                ...prev,
+                                status: item.id,
+                                pageNumber: 1,
+                                pageSize: 10,
+                              }));
+                            }}
                           >
                             {item.name}
                           </Link>
@@ -481,11 +497,22 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
                     onChange={(date) =>
                       setQuery((prev) => ({
                         ...prev,
-                        pickupDate: date,
+                        pickupDateRange: date ? [date] : null,
                         pageNumber: 1,
                       }))
                     }
                   />
+                  {/* <RangePicker
+                    format="DD.MM.YYYY"
+                    style={{ width: "100%" }}
+                    onChange={(date) =>
+                      setQuery((prev) => ({
+                        ...prev,
+                        pickupDate: date,
+                        pageNumber: 1,
+                      }))
+                    }
+                  /> */}
                 </Col>
                 <Col flex="1 1 0">
                   <Input
@@ -508,27 +535,38 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
                   <DatePicker
                     style={{ width: "100%" }}
                     format="DD.MM.YYYY"
-                    placeholder={t("requests.dropOffDate", "Drop-off Date")}
+                    placeholder={t("requests.delivery-Date", "Delivery Date")}
                     onChange={(date) =>
                       setQuery((prev) => ({
                         ...prev,
-                        dropOffDate: date,
+                        deliveryDateRange: date ? [date] : null,
                         pageNumber: 1,
                       }))
                     }
                   />
+                  {/* <RangePicker
+                    format="DD.MM.YYYY"
+                    style={{ width: "100%" }}
+                    onChange={(date) =>
+                      setQuery((prev) => ({
+                        ...prev,
+                        deliveryDate: date,
+                        pageNumber: 1,
+                      }))
+                    }
+                  /> */}
                 </Col>
                 <Col flex="1 1 0">
                   <Input
                     style={{ width: "100%" }}
                     placeholder={t(
-                      "requests.dropOffPostalCode",
-                      "Drop-off Postal Code"
+                      "requests.delivery-PostalCode",
+                      "Delivery Postal Code"
                     )}
                     onChange={(e) =>
                       setQuery((prev) => ({
                         ...prev,
-                        dropOffPostalCode: e.target.value,
+                        deliveryPostalCode: e.target.value,
                         pageNumber: 1,
                       }))
                     }
@@ -547,21 +585,32 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
                   <TableWrapper className="table-responsive">
                     <Table
                       loading={loading}
-                      dataSource={filteredData}
+                      dataSource={archivedRows}
                       columns={columns}
+                      showSorterTooltip={true}
                       rowKey="key"
+                      // pagination={{
+                      //   total: totalCount,
+                      //   current: query.pageNumber,
+                      //   pageSize: query.pageSize,
+                      //   showSizeChanger: true,
+                      //   pageSizeOptions: ["10", "50", "100"],
+
+                      //   onChange: onPaginationChange,
+                      //   onShowSizeChange: onShowSizeChange,
+                      //   showTotal: (total, range) =>
+                      //     `${range[0]}-${range[1]} of ${total} items`,
+                      // }}
                       pagination={{
                         total: totalCount,
                         current: query.pageNumber,
                         pageSize: query.pageSize,
                         showSizeChanger: true,
                         pageSizeOptions: ["10", "50", "100"],
-                        onChange: (page, pageSize) =>
-                          setQuery((prev) => ({
-                            ...prev,
-                            pageNumber: page,
-                            pageSize: pageSize,
-                          })),
+                        onChange: onPaginationChange,
+                        onShowSizeChange: onShowSizeChange,
+                        showTotal: (total, range) =>
+                          `${range[0]}-${range[1]} of ${total} items`,
                       }}
                       // onChange={(_, __, sorter) => onSorterChange(sorter)}
                       onChange={handleTableChange}
@@ -580,19 +629,18 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={800}
-        
       >
         {selectedOfferData && (
           <OfferCard
             trailertypeOptions={[]}
             isViewOnly={true}
-            showDeadline = {false}
+            showDeadline={false}
             ordinalNumber={selectedOfferData.requestId}
             routeInfo={{
               pickup: selectedOfferData.transportPickup?.[0]
                 ? `${selectedOfferData.transportPickup[0].city}, ${selectedOfferData.transportPickup[0].postalCode}, ${selectedOfferData.transportPickup[0].countryName}`
                 : "N/A",
-              dropoff: selectedOfferData.transportDelivery?.[0]
+              delivery: selectedOfferData.transportDelivery?.[0]
                 ? `${selectedOfferData.transportDelivery[0].city}, ${selectedOfferData.transportDelivery[0].postalCode}, ${selectedOfferData.transportDelivery[0].countryName}`
                 : "N/A",
               distance: selectedOfferData.totalDistance?.toString() || "0",
@@ -600,7 +648,9 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
               //   selectedOfferData.accessibility === 0
               //     ? "No Access Info"
               //     : "Has Access",
-              access: getAccessibilityDescription(selectedOfferData.accessibility),
+              access: getAccessibilityDescription(
+                selectedOfferData.accessibility
+              ),
             }}
             goodsInfo={{
               type:
@@ -609,7 +659,7 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
                 selectedOfferData.transportGoods?.[0]?.quantity?.toString() ||
                 "N/A",
               dims: selectedOfferData.transportGoods?.[0]
-                ? `L:${selectedOfferData.transportGoods[0].length} W:${selectedOfferData.transportGoods[0].width} H:${selectedOfferData.transportGoods[0].height}`
+                ? `Length: ${selectedOfferData.transportGoods[0].length} Width: ${selectedOfferData.transportGoods[0].width} Height: ${selectedOfferData.transportGoods[0].height} Weight: ${selectedOfferData.transportGoods[0].weight ?? 0}kg`
                 : "N/A",
               ldm: `${ldmValue} m³`,
               special: [
@@ -623,7 +673,6 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
                 .filter(Boolean)
                 .join(", "),
             }}
-        
             additionalInfo={{
               pickupRange: selectedOfferData.transportInformation?.[0]
                 ?.pickupDateFrom
@@ -638,7 +687,7 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
                     : "") +
                   (selectedOfferData.transportInformation[0].pickupTimeFrom ||
                   selectedOfferData.transportInformation[0].pickupTimeTo
-                    ? "<br/>" +
+                    ? "," +
                       (selectedOfferData.transportInformation[0].pickupTimeFrom
                         ? moment(
                             selectedOfferData.transportInformation[0]
@@ -656,7 +705,7 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
                         : "")
                     : "")
                 : "N/A",
-              dropoffRange: selectedOfferData.transportInformation?.[0]
+              deliveryRange: selectedOfferData.transportInformation?.[0]
                 ?.deliveryDateFrom
                 ? moment(
                     selectedOfferData.transportInformation[0].deliveryDateFrom
@@ -669,7 +718,7 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
                     : "") +
                   (selectedOfferData.transportInformation[0].deliveryTimeFrom ||
                   selectedOfferData.transportInformation[0].deliveryTimeTo
-                    ? "<br/>" +
+                    ? "," +
                       (selectedOfferData.transportInformation[0]
                         .deliveryTimeFrom
                         ? moment(
@@ -690,7 +739,7 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
                 : "N/A",
               currency:
                 selectedOfferData.transportInformation?.[0]?.currencyName ||
-                "N/A",
+                "EUR",
               requestDateTime: selectedOfferData.transportInformation?.[0]
                 ?.pickupDateFrom
                 ? moment(
@@ -701,10 +750,21 @@ const getAccessibilityDescription = (accessibility: number | undefined) => {
             form={{
               netPrice: carriersArray?.price || "",
               validity: carriersArray?.offerValidityDate || "",
-              truckType: carriersArray?.truckTypeName || "",  
-              pickupDateTime: carriersArray?.estimatedPickupDateTime ? moment(carriersArray.estimatedPickupDateTime) : null,
-              dropoffDateTime: carriersArray?.estimatedDeliveryDateTime ? moment(carriersArray.estimatedDeliveryDateTime) : null,
+              truckType: carriersArray?.truckTypeName || "",
+              pickupDateTimeRange: carriersArray?.estimatedPickupDateTimeFrom && carriersArray?.estimatedPickupDateTimeTo
+                ? [
+                    moment(carriersArray.estimatedPickupDateTimeFrom),
+                    moment(carriersArray.estimatedPickupDateTimeTo),
+                  ]
+                : null,
+              deliveryDateTimeRange: carriersArray?.estimatedDeliveryDateTimeFrom && carriersArray?.estimatedDeliveryDateTimeTo
+                ? [
+                    moment(carriersArray.estimatedDeliveryDateTimeFrom),
+                    moment(carriersArray?.estimatedDeliveryDateTimeTo),
+                  ]
+                : null,
             }}
+
             errors={{}}
             handleInputChange={() => {}}
             handleSubmit={() => {}}

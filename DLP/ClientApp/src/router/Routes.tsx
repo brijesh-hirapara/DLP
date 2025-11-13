@@ -87,6 +87,9 @@ import ManageTransportOffers from "pages/manage-transport-reuqests/ManageTranspo
 import ShipmentsPage from "pages/shipments/ShipmentsPage";
 import ViewShipmentsDetails from "pages/myShipments/ViewShipmentsDetails";
 import { InvitedCarriersListPage } from "pages/manage-transport-reuqests/InvitedCarriersListPage";
+import ManageTransportRequestDetailsPage from "pages/manage-transport-reuqests/ManageTransportRequestDetailsPage";
+import ViewIconDetailsPage from "pages/shipments/ViewIconDetailsPage";
+import ViewIconOrderDetailsPage from "pages/myOrders/ViewIconOrderDetailsPage";
 
 export type CustomRouteProps = {
   hasAccess: () => boolean;
@@ -213,6 +216,11 @@ export const MainRoutes: CustomRouteProps[] = [
     path: "/shipments",
     element: <ShipmentsPage />,
     hasAccess: () => hasPermission("shipments:list"),
+  },
+  {
+    path: "/shipments/view",
+    element: <ViewIconDetailsPage />,
+    hasAccess: () => hasPermission("shipments:view-details"),
   },
   {
     index: true,
@@ -479,13 +487,19 @@ export const MainRoutes: CustomRouteProps[] = [
   { 
     path:"/manage-transport-requests/invited-carriers/:transportRequestId",
     element: <InvitedCarriersListPage />,
-    hasAccess: () => true,
+    hasAccess: () => hasPermission("invited-carriers:list"),
   },
 
   { 
     path:"/manage-transport-requests/manage-transport-offers/:id",
     element: <ManageTransportOffers />,
     hasAccess: () => hasPermission("manage-transport-offers:list"),
+  },
+  
+  { 
+    path:"/manage-transport-requests/:id",
+    element: <ManageTransportRequestDetailsPage />,
+    hasAccess: () => hasPermission("manage-transport-requests:view-details"),
   },
 
   // {
@@ -497,6 +511,11 @@ export const MainRoutes: CustomRouteProps[] = [
     path: "/my-orders",
     element: <MyOrdersPage />,
     hasAccess: () => hasPermission("my-orders:list"),
+  },
+  {
+    path: "/my-orders/view/:id",
+    element: <ViewIconOrderDetailsPage />,
+    hasAccess: () => hasPermission("my-orders:view-details"),
   },
   {
     path: "/active-requests",

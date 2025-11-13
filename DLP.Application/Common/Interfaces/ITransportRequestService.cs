@@ -10,5 +10,6 @@ namespace DLP.Application.Common.Interfaces
     {
         Task ChangeTransportEvaluationStatus(string requestId, string startTime, string name);
         Task ChangeTransportCompletedOrRejected(string requestId, string startTime, string name);
+        Task ChangeShippingPODConfirm(string shipmentId, string startTime, string name);
     }
 }

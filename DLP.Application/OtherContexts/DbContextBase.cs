@@ -82,6 +82,7 @@ namespace DLP.Application.OtherContexts
         public DbSet<ServiceTechnicianAnnualReport> ServiceTechnicianAnnualReport { get; set; }
         public DbSet<ImportExportSubstancesReport> ImportExportSubstancesReport { get; set; }
         public DbSet<ImportExportSubstancesAnnualReport> ImportExportSubstancesAnnualReport { get; set; }
+        public DbSet<UploadPODFile> UploadPODFiles { get; set; }
 
     }
 }

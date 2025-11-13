@@ -1,0 +1,55 @@
+﻿@model DLP.Application.Common.Templates.Models.CarrierOfferResultEmailViewModel
+@using DLP.HtmlHelpers;
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>
+        @await Html.Translate("carrier-submited-offer:email-subject", "New Carrier Offer Submitted – Review Required", Model.UserLang)
+    </title>
+</head>
+<body style="font-family: Arial, sans-serif; max-width: 650px; margin: auto; background-color: #f9f9f9; padding: 25px; border-radius: 8px;">
+    <h2 style="color: #1d4ed8;">
+        @await Html.Translate("carrier-submited-offer:title", "New Carrier Offer Submitted", Model.UserLang)
+    </h2>
+
+    <p>
+        @await Html.Translate("carrier-submited-offer:greeting", "Dear Super Administrator,", Model.UserLang)
+    </p>
+
+    <p>
+        @await Html.Translate("carrier-submited-offer:intro", "A carrier has just submitted a new offer for Transport Request", Model.UserLang)
+        <strong>@Model.RequestId</strong>.
+    </p>
+
+    <table style="width: 100%; background: #fff; border: 1px solid #ddd; border-radius: 6px; margin-top: 15px;">
+    @*     <tr>
+            <td style="padding: 10px; font-weight: bold; width: 40%;">
+                @await Html.Translate("carrier-submited-offer:carrier-name", "Carrier Name", Model.UserLang)
+            </td>
+            <td style="padding: 10px;">@Model.FullName</td>
+        </tr> *@
+        <tr>
+            <td style="padding: 10px; font-weight: bold;">
+                @await Html.Translate("carrier-submited-offer:evaluation-result", "Evaluation Result", Model.UserLang)
+            </td>
+            <td style="padding: 10px;">@Model.EvaluationResult</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; font-weight: bold;">
+                @await Html.Translate("carrier-submited-offer:request-id", "Request ID", Model.UserLang)
+            </td>
+            <td style="padding: 10px;">@Model.RequestId</td>
+        </tr>
+    </table>
+
+    <p style="margin-top: 20px;">
+        @await Html.Translate("carrier-submited-offer:next-step", "Please review the submitted offer and proceed with evaluation or approval through the Admin Portal.", Model.UserLang)
+    </p>
+
+    <p style="margin-top: 30px;">
+        @await Html.Translate("carrier-submited-offer:regards", "Best Regards,", Model.UserLang)<br />
+        <strong>TransiGo Logistics Platform</strong>
+    </p>
+</body>
+</html>

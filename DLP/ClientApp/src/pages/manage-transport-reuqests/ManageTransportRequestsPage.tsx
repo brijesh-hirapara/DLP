@@ -1,10 +1,8 @@
 import { Col, Row, Table } from "antd";
 import {
-  OrganizationsApi,
-  OrganizationsApiApiOrganizationsGetRequest,
   RequestsApi,
 } from "api/api";
-import { OrganizationDto, UserFilterType } from "api/models";
+import { UserFilterType } from "api/models";
 import { Button } from "components/buttons/buttons";
 import { Cards } from "components/cards/frame/cards-frame";
 import { PageHeader } from "components/page-headers/page-headers";
@@ -19,19 +17,17 @@ import { Link } from "react-router-dom";
 import { ExportButtonPageApiHeader } from "components/buttons/export-button/export-button-api";
 import { AutoComplete } from "../../components/autoComplete/autoComplete";
 import { useTableSorting } from "hooks/useTableSorting";
-import { ProjectHeader, ProjectSorting, ProjectToolbarWrapper } from "pages/localization/email/style";
+import { ProjectHeader, ProjectSorting } from "pages/localization/email/style";
 import { sortDirections } from "constants/constants";
 import { ColumnsType } from "antd/es/table";
 import { ListTransportManagementDtoPaginatedList } from "api/models/list-transport-management-dto-paginated-list";
 import moment from "moment";
+import { CountdownTimer } from "utility/CountdownTimer/CountdownTimer";
+import { hasPermission } from "utility/accessibility/hasPermission";
+import startConnection from "pages/requests/RequestSignalRService";
+import { HubConnection } from "@microsoft/signalr";
 
 const requestsApi = new RequestsApi();
-
-interface ExtendedQuery extends OrganizationsApiApiOrganizationsGetRequest {
-  filterType?: number;
-}
-
-const organizationsApi = new OrganizationsApi();
 
 const intialData = {
   hasNextPage: false,
@@ -42,118 +38,120 @@ const intialData = {
   totalPages: 0,
 };
 
-type ModalStateType = {
-  addModalVisible: boolean;
-  editModalVisible: boolean;
-  institutionToEdit: OrganizationDto | null;
-};
-
-const getRequestStatus = (status: string, record: any) => {
-  let color = "deactivate";
-  const normalized = status?.toLowerCase?.() || "";
-
-  if (normalized === "active") {
-    color = "active";
-  } else if (normalized === "in shipment") {
-    color = "active";
-  } else if (normalized === "completed") {
-    color = "completed";
-  } else if (normalized === "under evaluation") {
-    color = "deactivate";
-  } else if (normalized === "canceled") {
-    color = "blocked";
-  }
-
-  // Helper for rendering bracketed info
-  const sublabel = record.timerBadge
-    ? (
-      <span
-        style={{
-          fontSize: 11,
-          marginLeft: 8,
-          color:
-            normalized === "active"
-              ? " #2374ab" // blue for timer
-              : (normalized === "under evaluation" && record.timerBadge.toLowerCase().includes("for your action"))
-                ? " #2d2d2d" // black for 'for your action'
-                : " #333",
-        }}
-      >
-        ({record.timerBadge})
-      </span>
-    )
-    : null;
-
-  return (
-    <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-      <span className={`ant-tag ${color}`}>{status}</span>
-      {sublabel}
-    </span>
-  );
-};
-
-
-
 export const ManageTransportRequestsPage = () => {
   const { t } = useTranslation();
   const searchTimeout = useRef<any>();
   const [requestsData, setRequestsData] =
     useState<ListTransportManagementDtoPaginatedList>(intialData);
-  const [institutionsLoading, setInstitutionsLoading] = useState(false);
-  const { sorting, onSorterChange } = useTableSorting();
+  const { onSorterChange, sorting } = useTableSorting();
   const [requestsLoading, setRequestsLoading] = useState(false);
-  const [modalState, setModalState] = useState<ModalStateType>({
-    addModalVisible: false,
-    editModalVisible: false,
-    institutionToEdit: null,
-  });
-
-  // const filterKeys = [
-  //   { id: "ALL", name: t("global.all", "All") },
-  //   { id: "ACTIVE", name: t("manage-transport-requests.active", "Active") },
-  //   { id: "UNDEREVALUATIONS", name: t("manage-transport-requests.under-evaluation", "Under Evaluation") },
-  //   { id: "INSHIPMENT", name: t("manage-transport-requests.in-shipment", "In Shipment") },
-  //   { id: "CANCELED", name: t("manage-transport-requests.canceled", "Canceled") },
-  // ];
-
-    const filterKeys = [
-      { id: UserFilterType.ALL, name: t("requests:select.all", "All") },
-      { id: UserFilterType.ACTIVE, name: t("requests:select.active", "Active") },
-      {
-        id: UserFilterType.PENDING,
-        name: t("requests:select.under-evaluation", "Under Evaluation"),
-      },
-      {
-        id: UserFilterType.DISABLED,
-        name: t("requests:select.completed", "Completed"),
-      },
-      { id: UserFilterType.DELETED, name: t("requests:select.canceled", "Canceled") },
-    ];
-
-  // const [request, setRequest] = useState({
-  //   filterType: filterKeys,
-  //   search: "",
-  //   pageNumber: 1,
-  //   pageSize: 10,
-  // });
+  const [connection, setConnection] = useState<HubConnection | null>(null);
+  const filterKeys = [
+    { id: UserFilterType.ALL, name: t("requests:select.all", "All") },
+    { id: UserFilterType.ACTIVE, name: t("requests:select.active", "Active") },
+    {
+      id: UserFilterType.PENDING,
+      name: t("requests:select.under-evaluation", "Under Evaluation"),
+    },
+    {
+      id: UserFilterType.DISABLED,
+      name: t("requests:select.completed", "Completed"),
+    },
+    { id: UserFilterType.DELETED, name: t("requests:select.canceled", "Canceled") },
+  ];
 
   const [request, setRequest] = useState<{
-  status : any;   
-  search: string;
-  pageNumber: number;
-  pageSize: number;
-}>({
-  status: UserFilterType.ALL,  
-  search: "",
-  pageNumber: 1,
-  pageSize: 10,
-});
+    status: any;
+    search: string;
+    pageNumber: number;
+    pageSize: number;
+  }>({
+    status: UserFilterType.ALL,
+    search: "",
+    pageNumber: 1,
+    pageSize: 10,
+  });
 
-// When request.filterType changes, fetch data
-useEffect(() => {
-  fetchRequests();
-}, [request]);
+  // When request.filterType changes, fetch data
+  useEffect(() => {
+    fetchRequests();
+  }, [request, sorting]);
 
+   // Signal R code Start
+
+   useEffect(() => {
+    initializeSignalR();
+
+    return () => {
+      if (connection) {
+        connection.stop();
+      }
+    };
+  }, []);
+
+  const initializeSignalR = async () => {
+    const connection: any = await startConnection(onReceiveBid);
+    setConnection(connection);
+  };
+
+  const onReceiveBid = async (id: any, price: any) => {
+    // Handle the received bid data
+    await fetchRequests();
+  };
+
+  // Signal R code End
+
+  const getRequestStatus = (status: any, record: any, item: any) => {
+    const normalized = status?.toString()?.trim()?.toLowerCase()?.replace(/\s+/g, "") || "";
+
+    const isActive = normalized.includes("active") || normalized.includes("inshipment");
+    const isCompleted = normalized.includes("completed");
+    const isUnderEvaluation = normalized.includes("underevaluation");
+    const isCanceled = normalized.includes("cancel");
+    const isForYourAction = item.isForYourAction;
+
+    const color = isActive
+      ? "#1890ff" // blue
+      : isCompleted
+        ? "#52c41a" // green
+        : isUnderEvaluation
+          ? "#fa8c16" // orange
+          : isCanceled
+            ? "#f5222d" // red
+            : "#d9d9d9"; // grey
+
+    return (
+      <>
+        <span
+          className={`ant-tag ${color}`}
+          style={{
+            backgroundColor: color,
+            color: "white",
+            border: "none"
+          }}
+        >
+          {status}
+        </span>
+        {(isActive) && (
+          <span style={{ color: color }}>{<CountdownTimer startTime={record} duration={24} />}</span>
+        )}
+        {(isUnderEvaluation) && (
+          <span style={{ color: color }}>{<CountdownTimer startTime={record} duration={48} />}</span>
+        )}
+        {(isForYourAction && isUnderEvaluation) && (
+          <span
+            style={{
+              fontSize: 11,
+              marginLeft: 8,
+              color: "#2d2d2d"
+            }}
+          >
+            ({t("manage-transport-request:for-your-action", "For Your Action")})
+          </span>
+        )}
+      </>
+    );
+  };
 
   const onSearchChange = (value: string) => {
     clearTimeout(searchTimeout.current);
@@ -171,12 +169,11 @@ useEffect(() => {
     setRequest((prevRequest) => ({ ...prevRequest, pageNumber, pageSize }));
   };
 
-
   const fetchRequests = async () => {
     try {
 
       setRequestsLoading(true);
-      const response = await requestsApi.apiTransportManagementAdminListGet(request);
+      const response = await requestsApi.apiTransportManagementAdminListGet({ ...request, ...sorting });
 
       setRequestsData(response.data);
     } catch (err) {
@@ -184,48 +181,6 @@ useEffect(() => {
       setRequestsLoading(false);
     }
   };
-
-  const handleCreateInstitutionClick = () => {
-    setModalState((prev) => ({
-      ...prev,
-      addModalVisible: true,
-      editModalVisible: false,
-    }));
-  };
-
-  const onChangeQuery = (Request: OrganizationsApiApiOrganizationsGetRequest) => {
-    setRequest((prevRequest) => ({ ...prevRequest, ...request }));
-  };
-
-  const onFilterChange = (e: any) => {
-    setRequest({
-      ...request,
-      status: e.target.value,
-      pageNumber: 1,
-      pageSize: 10,
-    });
-  };
-
-  const handleManageOffers = (record: any) => {
-    // TODO: Open modal, fetch offer data, etc.
-    console.log("Manage Offers clicked for", record);
-  };
-
-  const handleManageCarriers = (record: any) => {
-    // TODO: Open carrier management modal
-    console.log("Manage Invited Carriers clicked for", record);
-  };
-
-  const handleViewEvaluation = (record: any) => {
-    // TODO: Open evaluation modal
-    console.log("View Evaluation clicked for", record);
-  };
-
-  const handleShowDetails = (record: any) => {
-    // TODO: Open details modal or drawer
-    console.log("Details clicked for", record);
-  };
-
 
   const columns: ColumnsType<any> = [
     {
@@ -236,7 +191,7 @@ useEffect(() => {
       sortDirections: sortDirections,
     },
     {
-      title: t("global.shipperName", "Shipper Name"),
+      title: t("global.purchaser-name", "Purchaser Name"),
       dataIndex: "shipperName",
       key: "shipperName",
     },
@@ -289,8 +244,6 @@ useEffect(() => {
       title: t("requests:table.title.goods", "Goods"),
       dataIndex: "goods",
       key: "goods",
-      sorter: true,
-      sortDirections: sortDirections,
       render: (text) => (
         <>
           {text.split("\n").map((line: any, index: any) => (
@@ -306,9 +259,6 @@ useEffect(() => {
       title: t("requests:table.title.status", "Status"),
       dataIndex: "status",
       key: "status",
-      sorter: false,
-      // render: (status: string, record: any) => getRequestStatus(status, record),
-      sortDirections: sortDirections,
     },
     {
       title: t(
@@ -317,19 +267,23 @@ useEffect(() => {
       ),
       dataIndex: "carrierCount",
       key: "carrierCount",
-      sorter: true,
-      sortDirections: sortDirections,
-      render: (count: number, record: any) => (
-        <Link
-          to={`/manage-transport-requests/invited-carriers/${record.transportRequestId}`}
-          style={{
-            textDecoration: "underline",
-            cursor: "pointer",
-          }}
-        >
-          {count}
-        </Link>
-      ),
+      render: (count: number, record: any) => {
+        const canNavigate = hasPermission("invited-carriers:list");
+
+        return canNavigate ? (
+          <Link
+            to={`/manage-transport-requests/invited-carriers/${record.transportRequestId}`}
+            style={{
+              textDecoration: "underline",
+              cursor: "pointer",
+            }}
+          >
+            {count}
+          </Link>
+        ) : (
+          <span>{count}</span>
+        );
+      }
     },
     {
       title: t("requests:table.title.offers", "Offers"),
@@ -337,12 +291,12 @@ useEffect(() => {
       key: "adminOfferCount",
       sorter: true,
       sortDirections: sortDirections,
-      render: (count: number,record: any) => {
+      render: (count: number, record: any) => {
         if (!count) {
           //  If value is null, undefined, or 0 → show plain text
           return <span style={{ color: "#999" }}>{count ?? 0}</span>;
         }
-    
+
         //  When count > 0 → show clickable link
         return (
           <Link
@@ -361,37 +315,6 @@ useEffect(() => {
       title: t("global.actions", "Actions"),
       key: "actions",
       dataIndex: "action",
-      render: (text: any, record: any) => {
-        return (
-          <div
-            className="table-actions"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-end",
-            }}
-          >
-            {record.status === "Under Evaluation" && (
-              <>
-                <Button
-                  className="btn-icon"
-                  type="primary"
-                  to="#"
-                  shape="circle"
-                  onClick={() => handleViewEvaluation(record)}
-                >
-                  View Evaluation
-                </Button>
-              </>
-            )}
-            <Button className="btn-icon" type="primary" to="#" shape="circle">
-              <Link to={`/requests/${record.key}`}>
-                {t("archived-requests:details", "Details")}
-              </Link>
-            </Button>
-          </div>
-        );
-      },
       fixed: "right",
       width: 120,
     },
@@ -402,25 +325,24 @@ useEffect(() => {
     const goods = item.transportGoods?.[0] || {};
     const pickup = item.transportPickup?.[0] || {};
     const delivery = item.transportDelivery?.[0] || {};
-    const deliveryInfo = pickupInfo;
 
     const estimatedPickup =
       pickupInfo.pickupDateFrom && pickupInfo.pickupDateTo
         ? `${moment(pickupInfo.pickupDateFrom).format("DD.MM.YYYY")} - ${moment(pickupInfo.pickupDateTo).format("DD.MM.YYYY")}\n` +
         (pickupInfo.pickupTimeFrom || pickupInfo.pickupTimeTo
-          ? `${pickupInfo.pickupTimeFrom || ''} - ${pickupInfo.pickupTimeTo || ''}\n`
+          ? `${moment(pickupInfo.pickupTimeFrom).format("HH:mm") || ''} - ${moment(pickupInfo.pickupTimeTo).format("HH:mm") || ''}\n`
           : '') +
         `${pickup.city || ''}, ${pickup.postalCode || ''}, ${pickup.countryName || ''}`
-        : "N/A";
+        : `${pickup.city || ''}, ${pickup.postalCode || ''}, ${pickup.countryName || ''}`;
 
     const estimatedDelivery =
       pickupInfo.deliveryDateFrom && pickupInfo.deliveryDateTo
         ? `${moment(pickupInfo.deliveryDateFrom).format("DD.MM.YYYY")} - ${moment(pickupInfo.deliveryDateTo).format("DD.MM.YYYY")}\n` +
         (pickupInfo.deliveryTimeFrom || pickupInfo.deliveryTimeTo
-          ? `${pickupInfo.deliveryTimeFrom || ''} - ${pickupInfo.deliveryTimeTo || ''}\n`
+          ? `${moment(pickupInfo.deliveryTimeFrom).format("HH:mm") || ''} - ${moment(pickupInfo.deliveryTimeTo).format("HH:mm") || ''}\n`
           : '') +
         `${delivery.city || ''}, ${delivery.postalCode || ''}, ${delivery.countryName || ''}`
-        : "N/A";
+        : `${delivery.city || ''}, ${delivery.postalCode || ''}, ${delivery.countryName || ''}`;
     const length = (goods.length || 0);
     const width = (goods.width || 0);
     const height = (goods.height || 0);
@@ -429,62 +351,51 @@ useEffect(() => {
 
     const sideLength = Math.cbrt(ldmValue);
 
-    const ldmText = ` ${ldmValue.toFixed(2)} m³`;
-    const sideText = ` ${sideLength.toFixed(2)} m`; // Cube root as string with two decimals
+    const sideText = ` ${sideLength.toFixed(2)} m`;
 
 
     const goodsStr = `LDM ${sideText || 0} \nWeight ${goods.weight || 0} kg`;
 
-  return {
-    key: item.id,
-    transportRequestId: item.id,
-    requestId: item.requestId,
-    shipperName: item.shipperName || "",
-    posiblePickup: estimatedPickup,
-    requestedDelivery: estimatedDelivery,
-    totalDistance: item.totalDistance ? `${item.totalDistance} km` : '',
-    goods: goodsStr,
-    status: getRequestStatus(item.statusDesc || "",""),
-    lowestPrice: item.transportCarrier?.[0]?.price || "-",
-    carrierCount:item.carrierCount,
-    adminOfferCount:item.adminOfferCount,
-    action: (
-      <div
-        key={item.id}
-        className="table-actions"
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-        }}
-      >
-        {/* {status === 1 && (
-          <>
-            <Button type="primary" onClick={() => handleManageOffers(item)}>
-              {t("manage-transport-requests.manage-offers", "Manage Offers")}
-            </Button>
-            <Button onClick={() => handleManageCarriers(item)}>
-              {t("manage-transport-requests.manage-invited-carriers", "Manage Invited Carriers")}
-            </Button>
-          </>
-        )}
-
-        {status === 2 && (
-          <>
-            <Button type="primary" onClick={() => handleViewEvaluation(item)}>
-              {t("manage-transport-requests.view-evalution", "View Evalution")}
-            </Button>
-
-            <Button className="btn-icon" type="primary" to="#" shape="circle">
-              <Link to={`/requests/${id}`}>
-                {t("manage-transport-requests.details", "Details")}
-              </Link>
-            </Button>
-          </>
-        )} */}
-      </div>
-    ),
-  };
-});
+    return {
+      key: item.id,
+      transportRequestId: item.id,
+      requestId: item.requestId,
+      shipperName: item.shipperName || "",
+      posiblePickup: estimatedPickup,
+      requestedDelivery: estimatedDelivery,
+      totalDistance: item.totalDistance ? `${item.totalDistance} km` : '',
+      goods: goodsStr,
+      status: getRequestStatus(item.statusDesc || "", item.createdAt, item),
+      lowestPrice: item.transportCarrier?.[0]?.price || "-",
+      carrierCount: item.carrierCount,
+      adminOfferCount: item.adminOfferCount,
+      action: (
+        <div
+          className="table-actions"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-end",
+          }}
+        >
+          {(item.isForYourAction && item.statusDesc === "UnderEvaluation") && (
+            <>
+              <Button className="btn-icon" type="primary" to="#" shape="circle">
+                <Link to={`/manage-transport-requests/manage-transport-offers/${item.id}`}>
+                  {t("manage-transport-request:view-evaluation", "View Evaluation")}
+                </Link>
+              </Button>
+            </>
+          )}
+          <Button className="btn-icon" type="primary" to="#" shape="circle">
+            <Link to={`/manage-transport-requests/${item.id}`}>
+              {t("archived-requests:details", "Details")}
+            </Link>
+          </Button>
+        </div>
+      ),
+    };
+  });
 
   return (
     <>
@@ -507,7 +418,7 @@ useEffect(() => {
           buttons={[
             <ExportButtonPageApiHeader
               key="1"
-              callFrom={"TransportRequests"}
+              callFrom={"ManageTransportRequests"}
               filterType={request?.status}
               municipalityId={""}
               entityId={""}
@@ -540,7 +451,7 @@ useEffect(() => {
                               e.preventDefault();
                               setRequest({
                                 ...request,
-                                status: item.id, 
+                                status: item.id,
                                 pageNumber: 1,
                                 pageSize: 10,
                               });
@@ -577,7 +488,7 @@ useEffect(() => {
                 <div className="contact-table">
                   <TableWrapper className="table-responsive">
                     <Table
-                      loading={institutionsLoading}
+                      loading={requestsLoading}
                       dataSource={tableData}
                       columns={columns}
                       showSorterTooltip={false}
@@ -593,6 +504,7 @@ useEffect(() => {
                         showTotal: (total, range) =>
                           `${range[0]}-${range[1]} of ${total} items`,
                       }}
+                      onChange={(_, __, sorter) => onSorterChange(sorter)}
                     />
                   </TableWrapper>
                 </div>

@@ -79,10 +79,30 @@ namespace DLP.Application.TransportManagemen.Queries
                             .AsQueryable();
 
 
+                //if (!string.IsNullOrEmpty(request.Search))
+                //{
+                //    string search = request.Search.Replace(" ", "");
+                //    transportRequests = transportRequests.Where(r => r.TemplateName.Contains(search));
+                //}
+
                 if (!string.IsNullOrEmpty(request.Search))
                 {
                     string search = request.Search.Replace(" ", "");
-                    transportRequests = transportRequests.Where(r => r.TemplateName.Contains(search));
+
+                    transportRequests = transportRequests.Where(r =>
+                        r.TemplateName.Contains(search) ||
+                        // ✅ Pickup Postal Code
+                        r.TransportPickup.Any(p => p.PostalCode.Contains(search)) ||
+
+                        // ✅ Pickup City
+                        r.TransportPickup.Any(p => p.City.Contains(search)) ||
+
+                        // ✅ Delivery Postal Code
+                        r.TransportDelivery.Any(d => d.PostalCode.Contains(search)) ||
+
+                        // ✅ Delivery City
+                        r.TransportDelivery.Any(d => d.City.Contains(search))
+                    );
                 }
 
 

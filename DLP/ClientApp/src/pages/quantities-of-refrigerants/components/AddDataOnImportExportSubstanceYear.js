@@ -39,14 +39,12 @@ function AddDataOnImportExportSubstanceYear({ onCancel, onFinish }) {
       await refrigerantTypesApi.apiRefrigerantTypesGet({
         ...request,
       });
-    console.log(data)
     setRefrigerantData(data.items);
     setIsLoading(false);
   };
 
   const handleRefrigerantChange = (value) => {
     const selected = refrigerantData.find(refrigerant => refrigerant.id === value);
-    console.log("Selected refrigerant: ", selected);
     setSelectedRefrigerant(selected);
     if (selected) {
       form.setFieldsValue({
@@ -62,7 +60,6 @@ function AddDataOnImportExportSubstanceYear({ onCancel, onFinish }) {
   const handleSubmit = async (values) => {
     try {
       setIsSubmitLoading(true);
-      console.log(values)
       onFinish(values); // Send data to parent component
     } catch (error) {
     } finally {
